@@ -45,6 +45,11 @@ export type KeyTakeaway = {
   highlight: boolean;
 };
 
+export type Region = {
+  region: string;
+  flag: string;
+};
+
 export type VerificationStatus = "VERIFIED" | "UNVERIFIED" | "DISPUTED";
 
 export interface ArticleAnalysis {
@@ -87,4 +92,7 @@ export interface Article extends ArticleAnalysis {
   title?: string;
   verificationStatus: VerificationStatus;
   verificationNote?: string;
+  
+  // Geographic regions affected
+  regions: Region[];
 }

@@ -89,6 +89,8 @@ function mapDBToArticle(db: DBArticleAnalysis): Article {
 
     verificationStatus: "VERIFIED" as VerificationStatus,
     verificationNote: `Analyzed by ${db.model_used} on ${new Date(db.analyzed_at || "").toLocaleDateString()}`,
+    
+    regions: db.regions ?? [],
   };
 }
 
