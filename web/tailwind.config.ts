@@ -18,6 +18,11 @@ const config = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        heading: ["var(--font-outfit)", "system-ui", "sans-serif"],
+        mono: ["var(--font-jetbrains-mono)", "monospace"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -52,6 +57,18 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        brand: {
+          green: "hsl(var(--shepherd-green))",
+          teal: "hsl(var(--deep-teal))",
+          dark: "hsl(var(--network-dark))",
+          charcoal: "hsl(var(--charcoal))",
+        },
+        status: {
+          critical: "hsl(var(--destructive))",
+          warning: "hsl(var(--warning))",
+          safe: "hsl(var(--safe))",
+          info: "hsl(var(--secondary))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -67,10 +84,27 @@ const config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "shimmer": {
+          "100%": {
+            transform: "translateX(100%)",
+          },
+        },
+        "pulse-glow": {
+          "0%, 100%": {
+            opacity: "1",
+            boxShadow: "0 0 20px rgba(16, 185, 129, 0.5)"
+          },
+          "50%": {
+            opacity: "0.8",
+            boxShadow: "0 0 10px rgba(16, 185, 129, 0.2)"
+          },
+        }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "shimmer": "shimmer 2s infinite",
+        "pulse-glow": "pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
     },
   },

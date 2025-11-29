@@ -84,18 +84,20 @@
 
 *   **Trigger:** User sees a Red Border Card: "North Korean Hackers Deploy 197 npm Packages".
 *   **Card Anatomy:**
-    *   **Header:** Title + Source + Time ("2 hours ago").
-    *   **Body:** 3-bullet AI summary.
+    *   **Header:** Headline + Source + Time ("2 hours ago").
+    *   **Body:** 2-3 sentence executive summary (TL;DR).
+    *   **Key Takeaways:** Bullet points of critical info.
     *   **Footer:**
         *   `Badge`: "Supply Chain" (Red), "Node.js" (Blue).
-        *   `Threat Meter`: 92/100 (Visual gauge).
+        *   `Threat Meter`: 92/100 (Visual gauge based on Relevance Score).
         *   `Trust Status`: ⚠️ Unverified.
 *   **Interaction Flow:**
-    1.  **Glance:** User reads summary in 10 seconds.
+    1.  **Glance:** User reads TL;DR in 10 seconds.
     2.  **Verify:** Clicks "Fact-Check" → Gemini + Google Search Grounding → ✅ "Verified by 3 sources".
     3.  **Expand:** Clicks card → Shows:
-        *   Full AI-generated analysis.
-        *   "Remediation Steps" (AI-generated based on their stack).
+        *   Full AI-generated analysis (Long Summary).
+        *   "Action Items" (Immediate/Soon).
+        *   "Affected Entities" (Companies/Products).
         *   "Attack Chain" (Mermaid.js diagram).
     4.  **Act:** "Share to Slack" button → Sends formatted alert to their security channel.
 
@@ -135,11 +137,7 @@
 | :--- | :--- | :--- |
 | `id` | UUID | Primary Key |
 | `article_id` | UUID | FK to articles |
-| `summary` | JSONB | `["bullet 1", "bullet 2", "bullet 3"]` |
-| `threat_score` | Int | 0-100 (based on CVSS-like factors) |
-| `category` | Text | "Malware", "Vulnerability", "Policy", "Data Breach" |
-| `tags` | JSONB | `["Python", "AWS", "FinTech", "Supply Chain"]` |
-| `affected_systems` | JSONB | `["AWS Lambda", "npm", "Node.js 18+"]` |
+| `analysis` | JSONB | Full structured `ArticleAnalysis` object |
 | `embedding` | Vector(768) | For RAG (Summary + Title) |
 | `trust_status` | Text | "unverified", "verified", "disputed" |
 | `verification_sources` | JSONB | `["https://cisa.gov/...", "https://nvd.nist.gov/..."]` |
@@ -163,25 +161,16 @@
 #### Agent A: The Analyst (Ingestion)
 *   **Trigger:** New RSS item from The Hacker News.
 *   **Input:** Raw article text.
-*   **Prompt:**
-    ```
-    You are a Senior Cybersecurity Analyst. Analyze this article and extract:
-    1. Summary: 3 concise bullet points (max 20 words each).
-    2. Threat Score: 0-100 based on: exploitability, impact, active exploitation.
-    3. Category: One of [Malware, Vulnerability, Data Breach, Phishing, Supply Chain, Policy, AI Security].
-    4. Tags: Relevant technologies, platforms, threat actors (e.g., "AWS", "Python", "Lazarus Group").
-    5. Affected Systems: Specific systems/versions impacted.
-    Return as JSON.
-    ```
-*   **Output:** Structured JSON → Saved to `processed_insights`.
+*   **Prompt:** Uses the `General News Article Analysis Schema` to extract structured data.
+*   **Output:** Structured JSON (`ArticleAnalysis`) → Saved to `processed_insights`.
 
 #### Agent B: The Skeptic (Verification)
-*   **Trigger:** User clicks "Fact-Check" OR `threat_score > 80`.
+*   **Trigger:** User clicks "Fact-Check" OR `priority == CRITICAL`.
 *   **Tool:** Gemini 3.0 Pro with Google Search Grounding.
 *   **Prompt:**
     ```
     Verify these claims from a cybersecurity article:
-    "{summary}"
+    "{tldr}"
     
     Search authoritative sources (CISA, NVD, vendor advisories, reputable security blogs).
     Return:
@@ -202,12 +191,41 @@
 
 ---
 
-### 3. API Routes (Next.js App Router)
+### 3. Article Analysis Schema
+
+The core data structure for all processed articles:
+
+```python
+class ArticleAnalysis(BaseModel):
+    headline: str               # Catchy 1-line summary
+    tldr: str                  # 2-3 sentence executive summary
+    priority: Priority         # CRITICAL, HIGH, MEDIUM, LOW, INFO
+    categories: list[ContentCategory]
+    content_type: ContentType
+    key_takeaways: list[KeyTakeaway]
+    affected_entities: list[AffectedEntity]
+    action_items: list[ActionItem]
+    short_summary: str
+    long_summary: str
+    relevance_score: int       # 1-10
+    confidence_score: int      # 1-10
+    is_breaking_news: bool
+    is_sponsored: bool
+    worth_full_read: bool
+    read_time_minutes: int
+    related_topics: list[str]
+    mentioned_technologies: list[str]
+    mentioned_companies: list[str]
+```
+
+---
+
+### 4. API Routes (Next.js App Router)
 
 | Route | Method | Description |
 | :--- | :--- | :--- |
 | `/api/ingest` | POST | Cron-triggered. Fetches RSS → Agent A → DB. |
-| `/api/feed` | GET | Returns paginated articles. Params: `tags[]`, `minScore`, `page`. |
+| `/api/feed` | GET | Returns paginated articles. Params: `categories[]`, `minPriority`, `page`. |
 | `/api/article/[id]` | GET | Full article details + AI analysis. |
 | `/api/verify/[id]` | POST | Triggers Agent B → Updates `trust_status`. |
 | `/api/chat` | POST | RAG chat. Body: `{ message, articleId? }`. Streams response. |
@@ -216,42 +234,15 @@
 
 ---
 
-### 4. Relevance Scoring Algorithm
+### 5. Relevance Scoring Algorithm
 
 ```
-relevance_score = (threat_score * 0.4) + (tag_match_score * 0.6)
+relevance_score = (priority_score * 0.4) + (tag_match_score * 0.6)
 
 Where:
-- threat_score: 0-100 from AI analysis.
-- tag_match_score: (matched_tags / user_total_tags) * 100
-
-Example:
-- Article tags: ["Python", "Supply Chain", "npm"]
-- User tags: ["Python", "AWS", "Lambda", "Supply Chain"]
-- Matched: 2/4 = 50% → tag_match_score = 50
-- threat_score = 85
-- relevance_score = (85 * 0.4) + (50 * 0.6) = 34 + 30 = 64
+- priority_score: CRITICAL=10, HIGH=8, MEDIUM=5, LOW=2, INFO=1
+- tag_match_score: (matched_categories + matched_tech) / user_total_interests * 10
 ```
-
----
-
-### 5. Notification Flow (Slack Integration)
-
-1.  **Trigger:** New article with `relevance_score > user.alert_threshold`.
-2.  **Format:** Slack Block Kit message:
-    ```
-    🚨 *Critical: Python Supply Chain Attack*
-    
-    • 197 malicious npm packages discovered
-    • Targets Node.js projects via install hooks
-    • Active exploitation confirmed
-    
-    Threat Level: 🔴 92/100
-    Relevance: HIGH (matches: Python, Supply Chain)
-    
-    [View in CyberShepherd] [Mark as Read]
-    ```
-3.  **Delivery:** POST to `user.slack_webhook`.
 
 ---
 

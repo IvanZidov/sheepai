@@ -6,7 +6,7 @@ import { ShepherdNav } from "@/components/layout/shepherd-nav";
 import { ThreatCard } from "@/components/feed/threat-card";
 import { ShepherdChat } from "@/components/chat/shepherd-chat";
 import { fetchArticles, verifyArticle } from "@/lib/mock-data";
-import { Article } from "@/lib/types";
+import { Article, Priority } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, Filter, Globe, ShieldAlert, Zap } from "lucide-react";
@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 export default function DashboardPage() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState("All");
+  const [activeFilter, setActiveFilter] = useState<string>("All");
 
   useEffect(() => {
     fetchArticles().then((data) => {
@@ -37,10 +37,10 @@ export default function DashboardPage() {
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
           <Filter className="w-4 h-4 text-primary" />
-          Threat Severity
+          Priority Level
         </h3>
         <div className="grid gap-1">
-          {["All", "Critical", "High", "Medium", "Low"].map((f) => (
+          {["All", "CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"].map((f) => (
              <Button 
                 key={f} 
                 variant={activeFilter === f ? "secondary" : "ghost"} 
@@ -48,11 +48,12 @@ export default function DashboardPage() {
                 className="h-8 text-sm justify-start w-full font-normal"
                 onClick={() => setActiveFilter(f)}
              >
-                {f === "Critical" && <span className="w-2 h-2 rounded-full bg-red-500 mr-2" />}
-                {f === "High" && <span className="w-2 h-2 rounded-full bg-orange-500 mr-2" />}
-                {f === "Medium" && <span className="w-2 h-2 rounded-full bg-yellow-500 mr-2" />}
-                {f === "Low" && <span className="w-2 h-2 rounded-full bg-blue-500 mr-2" />}
-                {f}
+                {f === "CRITICAL" && <span className="w-2 h-2 rounded-full bg-red-500 mr-2" />}
+                {f === "HIGH" && <span className="w-2 h-2 rounded-full bg-orange-500 mr-2" />}
+                {f === "MEDIUM" && <span className="w-2 h-2 rounded-full bg-yellow-500 mr-2" />}
+                {f === "LOW" && <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2" />}
+                {f === "INFO" && <span className="w-2 h-2 rounded-full bg-blue-500 mr-2" />}
+                {f.charAt(0) + f.slice(1).toLowerCase()}
              </Button>
           ))}
         </div>
@@ -61,10 +62,10 @@ export default function DashboardPage() {
       <div className="space-y-3">
          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
             <Zap className="w-4 h-4 text-primary" />
-            Trending Tags
+            Trending Topics
          </h3>
          <div className="flex flex-wrap gap-2">
-             {["Ransomware", "Python", "Zero-Day", "Cloud", "AI", "Phishing", "Supply Chain"].map(tag => (
+             {["Ransomware", "Python", "Zero-Day", "Cloud", "AI", "Phishing", "Supply Chain", "AWS", "npm"].map(tag => (
                  <Badge 
                     key={tag} 
                     variant="outline" 
@@ -136,7 +137,7 @@ export default function DashboardPage() {
                 <span className="font-mono text-xs text-foreground">1,248</span>
              </div>
              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Threats Detected</span>
+                <span className="text-muted-foreground">Active Threats</span>
                 <span className="text-red-400 font-mono text-xs font-bold">12 CRITICAL</span>
              </div>
         </CardContent>
@@ -146,7 +147,7 @@ export default function DashboardPage() {
 
   const filteredArticles = activeFilter === "All" 
     ? articles 
-    : articles.filter(a => a.threatLevel.toLowerCase() === activeFilter.toLowerCase());
+    : articles.filter(a => a.priority === activeFilter);
 
   return (
     <div className="min-h-screen bg-background font-sans selection:bg-primary/20 selection:text-primary">
@@ -158,7 +159,7 @@ export default function DashboardPage() {
              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-blue-500 to-emerald-500 opacity-20" />
              <div className="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all duration-500" />
              
-             <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3 text-white">
+             <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3 text-white font-heading">
                 Silence the Noise. Spot the <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">Wolves</span>.
              </h1>
              <p className="text-zinc-400 max-w-2xl text-base leading-relaxed">
@@ -168,7 +169,7 @@ export default function DashboardPage() {
 
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold flex items-center gap-2 text-foreground">
+                <h2 className="text-lg font-semibold flex items-center gap-2 text-foreground font-heading">
                     <ShieldAlert className="w-5 h-5 text-primary" />
                     Latest Intelligence
                 </h2>
