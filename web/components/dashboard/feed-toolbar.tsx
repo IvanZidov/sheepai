@@ -84,6 +84,7 @@ export function FeedToolbar() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      </div>
     </div>
   );
 }
