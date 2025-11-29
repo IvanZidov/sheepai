@@ -1,21 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DashboardShell } from "@/components/layout/shell";
 import { ShepherdNav } from "@/components/layout/shepherd-nav";
 import { ThreatCard } from "@/components/feed/threat-card";
 import { ShepherdChat } from "@/components/chat/shepherd-chat";
+import { HeroSection } from "@/components/landing/hero-section";
+import { FeatureCards } from "@/components/landing/feature-cards";
+import { NewsletterInline } from "@/components/landing/newsletter-inline";
 import { fetchArticles, verifyArticle } from "@/lib/mock-data";
-import { Article, Priority } from "@/lib/types";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity, Filter, Globe, ShieldAlert, Zap } from "lucide-react";
+import { Article } from "@/lib/types";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, SlidersHorizontal } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
-export default function DashboardPage() {
+export default function LandingPage() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     fetchArticles().then((data) => {
@@ -31,171 +34,105 @@ export default function DashboardPage() {
     }
   };
 
-  // Left Sidebar: Filters
-  const filters = (
-    <div className="space-y-8">
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <Filter className="w-4 h-4 text-primary" />
-          Priority Level
-        </h3>
-        <div className="grid gap-1">
-          {["All", "CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"].map((f) => (
-             <Button 
-                key={f} 
-                variant={activeFilter === f ? "secondary" : "ghost"} 
-                size="sm" 
-                className="h-8 text-sm justify-start w-full font-normal"
-                onClick={() => setActiveFilter(f)}
-             >
-                {f === "CRITICAL" && <span className="w-2 h-2 rounded-full bg-red-500 mr-2" />}
-                {f === "HIGH" && <span className="w-2 h-2 rounded-full bg-orange-500 mr-2" />}
-                {f === "MEDIUM" && <span className="w-2 h-2 rounded-full bg-yellow-500 mr-2" />}
-                {f === "LOW" && <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2" />}
-                {f === "INFO" && <span className="w-2 h-2 rounded-full bg-blue-500 mr-2" />}
-                {f.charAt(0) + f.slice(1).toLowerCase()}
-             </Button>
-          ))}
-        </div>
-      </div>
-
-      <div className="space-y-3">
-         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <Zap className="w-4 h-4 text-primary" />
-            Trending Topics
-         </h3>
-         <div className="flex flex-wrap gap-2">
-             {["Ransomware", "Python", "Zero-Day", "Cloud", "AI", "Phishing", "Supply Chain", "AWS", "npm"].map(tag => (
-                 <Badge 
-                    key={tag} 
-                    variant="outline" 
-                    className="cursor-pointer hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors px-2 py-1 text-xs"
-                 >
-                     #{tag}
-                 </Badge>
-             ))}
-         </div>
-      </div>
-    </div>
-  );
-
-  // Right Sidebar: Visuals
-  const visuals = (
-    <div className="space-y-6">
-      <Card className="bg-zinc-900/50 border-zinc-800 overflow-hidden backdrop-blur-sm">
-        <CardHeader className="p-4 pb-3 border-b border-zinc-800/50">
-           <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Globe className="w-4 h-4 text-blue-500" />
-              Global Threat Activity
-           </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0 relative h-48 bg-zinc-950/50">
-            {/* Mock Map Overlay */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/10 to-transparent" />
-            
-            {/* Ping 1: US */}
-            <div className="absolute top-[30%] left-[20%]">
-                <div className="w-2 h-2 bg-red-500 rounded-full animate-ping opacity-75" />
-                <div className="w-1.5 h-1.5 bg-red-500 rounded-full absolute top-0.5 left-0.5" />
-            </div>
-
-            {/* Ping 2: Europe */}
-            <div className="absolute top-[25%] left-[48%]">
-                <div className="w-3 h-3 bg-orange-500 rounded-full animate-ping delay-300 opacity-75" />
-                <div className="w-2 h-2 bg-orange-500 rounded-full absolute top-0.5 left-0.5" />
-            </div>
-            
-             {/* Ping 3: Asia */}
-            <div className="absolute top-[40%] left-[75%]">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full animate-ping delay-700 opacity-75" />
-                <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full absolute top-0.5 left-0.5" />
-            </div>
-
-            <div className="absolute bottom-2 right-2 text-[10px] text-zinc-500 font-mono">
-                LIVE FEED • 3 REGIONS
-            </div>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
-        <CardHeader className="p-4 pb-3 border-b border-zinc-800/50">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Activity className="w-4 h-4 text-emerald-500" />
-                System Status
-            </CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 space-y-4">
-             <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Scraper Status</span>
-                <div className="flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-emerald-500 font-mono text-xs">ONLINE</span>
-                </div>
-             </div>
-             <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Articles Processed</span>
-                <span className="font-mono text-xs text-foreground">1,248</span>
-             </div>
-             <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Active Threats</span>
-                <span className="text-red-400 font-mono text-xs font-bold">12 CRITICAL</span>
-             </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  const filteredArticles = activeFilter === "All" 
-    ? articles 
-    : articles.filter(a => a.priority === activeFilter);
+  const filteredArticles = articles.filter(article => {
+    const matchesPriority = activeFilter === "All" || article.priority === activeFilter;
+    const matchesSearch = article.headline.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          article.tldr.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesPriority && matchesSearch;
+  });
 
   return (
-    <div className="min-h-screen bg-background font-sans selection:bg-primary/20 selection:text-primary">
+    <div className="min-h-screen bg-zinc-950 font-sans selection:bg-emerald-500/20 selection:text-emerald-500">
       <ShepherdNav />
       
-      <DashboardShell filters={filters} visuals={visuals}>
-          {/* Hero / Intro */}
-          <div className="mb-8 p-8 rounded-2xl bg-gradient-to-b from-zinc-900 via-zinc-900/50 to-transparent border border-zinc-800 relative overflow-hidden group">
-             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-blue-500 to-emerald-500 opacity-20" />
-             <div className="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all duration-500" />
-             
-             <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3 text-white font-heading">
-                Silence the Noise. Spot the <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">Wolves</span>.
-             </h1>
-             <p className="text-zinc-400 max-w-2xl text-base leading-relaxed">
-                CyberShepherd uses Gemini AI to filter, verify, and summarize cybersecurity news, so you can focus on defending the flock.
-             </p>
-          </div>
+      <main>
+        <HeroSection />
+        <FeatureCards />
 
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold flex items-center gap-2 text-foreground font-heading">
-                    <ShieldAlert className="w-5 h-5 text-primary" />
-                    Latest Intelligence
-                </h2>
-                <span className="text-xs text-muted-foreground font-mono">
-                    UPDATED: {new Date().toLocaleTimeString()}
-                </span>
-            </div>
+        {/* Public Feed Section */}
+        <section id="feed" className="py-24 bg-zinc-950 relative">
+          <div className="container mx-auto px-4 max-w-5xl">
             
-            <div className="grid gap-4 pb-20">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+              <div>
+                <h2 className="text-3xl font-bold text-white mb-2 font-heading">Latest Intelligence</h2>
+                <p className="text-zinc-400">Real-time threats monitored by CyberShepherd.</p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                  <Input 
+                    placeholder="Search threats..." 
+                    className="pl-10 bg-zinc-900 border-zinc-800 w-full sm:w-64"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                {/* Mobile Filter Toggle could go here */}
+              </div>
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-wrap gap-2 mb-8">
+               {["All", "CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"].map((f) => (
+                 <Button 
+                    key={f} 
+                    variant={activeFilter === f ? "default" : "outline"} 
+                    size="sm" 
+                    onClick={() => setActiveFilter(f)}
+                    className={`text-xs font-mono uppercase tracking-wider ${
+                      activeFilter === f 
+                        ? "bg-emerald-600 hover:bg-emerald-500 text-white border-transparent" 
+                        : "border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-900"
+                    }`}
+                 >
+                    {f === "CRITICAL" && <span className="w-1.5 h-1.5 rounded-full bg-red-500 mr-2 animate-pulse" />}
+                    {f}
+                 </Button>
+              ))}
+            </div>
+
+            {/* Feed Grid */}
+            <div className="space-y-6">
                 {loading ? (
-                    // Skeletons
                     Array.from({length: 3}).map((_, i) => (
-                        <div key={i} className="h-48 rounded-xl bg-zinc-900/50 border border-zinc-800 animate-pulse" />
+                        <div key={i} className="h-64 rounded-xl bg-zinc-900/50 border border-zinc-800 animate-pulse" />
                     ))
                 ) : filteredArticles.length > 0 ? (
-                    filteredArticles.map(article => (
-                        <ThreatCard key={article.id} article={article} onVerify={onVerify} />
+                    filteredArticles.map((article, index) => (
+                        <div key={article.id}>
+                           <ThreatCard article={article} onVerify={onVerify} />
+                           {/* Inline Newsletter every 2 items */}
+                           {index === 1 && <div className="my-8"><NewsletterInline /></div>}
+                        </div>
                     ))
                 ) : (
-                    <div className="text-center py-20 text-muted-foreground">
-                        No threats found for this filter. Stay vigilant.
+                    <div className="text-center py-20 bg-zinc-900/30 rounded-xl border border-zinc-800 border-dashed">
+                        <div className="text-zinc-500 mb-2">No threats found matching your criteria.</div>
+                        <Button variant="link" onClick={() => {setActiveFilter("All"); setSearchQuery("");}} className="text-emerald-500">
+                          Clear filters
+                        </Button>
                     </div>
                 )}
             </div>
+            
+            <div className="mt-12 text-center">
+               <Button variant="outline" size="lg" className="h-12 px-8 border-zinc-800 hover:bg-zinc-900 text-zinc-400">
+                  Load More Articles
+               </Button>
+            </div>
+
           </div>
-      </DashboardShell>
+        </section>
+      </main>
+
+      {/* Simple Footer */}
+      <footer className="border-t border-zinc-900 py-12 bg-zinc-950">
+         <div className="container mx-auto px-4 text-center text-zinc-500 text-sm">
+            <p>© 2025 CyberShepherd. Silence the noise.</p>
+         </div>
+      </footer>
 
       <ShepherdChat />
     </div>
