@@ -13,6 +13,8 @@ import { ShepherdNav } from "@/components/layout/shepherd-nav";
 import { useAuth } from "@/contexts/auth-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+import { SubscriptionList } from '@/components/dashboard/subscription-list';
+
 export default function SettingsPage() {
   const { user, isLoading } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -112,6 +114,17 @@ export default function SettingsPage() {
                    <code className="bg-muted p-2 rounded text-xs font-mono">{user.id}</code>
                  </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Subscriptions */}
+          <Card className="border-border/60">
+            <CardHeader>
+              <CardTitle>Active Subscriptions</CardTitle>
+              <CardDescription>Manage your alert subscriptions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SubscriptionList />
             </CardContent>
           </Card>
 

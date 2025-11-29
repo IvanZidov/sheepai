@@ -16,6 +16,7 @@ from bs4 import BeautifulSoup
 from ..config import HACKERNEWS_URL, OPENAI_MODEL
 from ..database import get_supabase
 from .analyzer import analyze_article, save_analysis, get_analysis_by_url
+from .notifier import process_notifications
 
 logger = logging.getLogger(__name__)
 
@@ -305,6 +306,35 @@ def scrape_and_save() -> dict:
         analyzed_count, analysis_errors = loop.run_until_complete(
             analyze_articles_batch(saved_articles)
         )
+
+        # Phase 3: Trigger Notifications
+        # We need the full analysis result for notifications, not just the raw article data.
+        # We'll re-fetch the analyzed articles or modify analyze_articles_batch to return them.
+        # For now, let's just fetch the newly analyzed ones from DB or construct from memory if possible.
+        # Since analyze_article_async saves to DB, we can pass the 'saved_articles' (which has raw data)
+        # BUT we need the 'analysis' result (relevance score, priority etc).
+        # Let's assume we fetch the latest analyses for these IDs.
+        
+        # Ideally we should gather the analysis objects from analyze_articles_batch
+        # But to keep it simple, we will query the DB for the articles we just processed.
+        if analyzed_count > 0:
+            try:
+                new_article_ids = [aid for _, aid in saved_articles]
+                supabase = get_supabase()
+                # Fetch the full analysis for notification matching
+                # We need to cast IDs to string because `in_` expects it sometimes or int works depending on library version
+                # Using loop.run_in_executor to avoid blocking if needed, but supabase-py is sync usually
+                
+                analyses_response = supabase.table("article_analyses") \
+                    .select("*") \
+                    .in_("article_id", new_article_ids) \
+                    .execute()
+                
+                if analyses_response.data:
+                    process_notifications(analyses_response.data)
+                    
+            except Exception as e:
+                logger.error(f"Error triggering notifications: {e}")
     
     total_errors = error_count + analysis_errors
     
