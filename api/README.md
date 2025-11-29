@@ -1,4 +1,4 @@
-# 🐑 SheepAI News Analyzer API
+# 🐑 CyberShepherd News Analyzer API
 
 AI-powered news analysis API that automatically scrapes, analyzes, and summarizes articles from The Hacker News.
 

@@ -87,7 +87,7 @@ def send_email(to_email: str, subject: str, html_content: str):
         return
 
     try:
-        sender = {"name": "SheepAI News", "email": EMAIL_FROM_ADDRESS}
+        sender = {"name": "CyberShepherd News", "email": EMAIL_FROM_ADDRESS}
         to = [{"email": to_email}]
         send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
             to=to,

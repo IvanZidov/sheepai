@@ -24,7 +24,7 @@ async def test_email(request: TestEmailRequest):
         html_content = """
         <div style="padding: 20px; font-family: sans-serif;">
             <h2>🧪 Test Notification</h2>
-            <p>This is a test email from your SheepAI News Analyzer.</p>
+            <p>This is a test email from your CyberShepherd News Analyzer.</p>
             <p>If you received this, your email configuration is working correctly! 🎉</p>
             <hr>
             <p style="font-size: 12px; color: #666;">SheepAI Bot 🐑</p>

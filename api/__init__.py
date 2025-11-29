@@ -1,4 +1,4 @@
 """
-SheepAI News Analyzer API
+CyberShepherd News Analyzer API
 """
 

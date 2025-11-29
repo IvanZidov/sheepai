@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-SheepAI News Analyzer API
+CyberShepherd News Analyzer API
 Main FastAPI application entry point
 """
 

@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # API Settings
-API_TITLE = "SheepAI News Analyzer"
+API_TITLE = "CyberShepherd News Analyzer"
 API_VERSION = "1.0.0"
 API_DESCRIPTION = "AI-powered news scraping and analysis"
 
