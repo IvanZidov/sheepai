@@ -7,6 +7,7 @@ import { Priority } from "@/lib/types";
 import { Calendar, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { CollapsibleFilter } from "@/components/dashboard/collapsible-filter";
 
 export function FilterGroups() {
   const { 
@@ -26,11 +27,22 @@ export function FilterGroups() {
   return (
     <div className="space-y-6">
       {/* Priority Filter */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 pb-1">
-          <ShieldAlert className="w-4 h-4 text-primary" />
-          <h3 className="font-semibold text-sm text-foreground">Severity Level</h3>
-        </div>
+      <CollapsibleFilter 
+        title="Severity Level" 
+        icon={ShieldAlert}
+        badge={priorityFilter.length > 0 ? (
+           <Badge 
+             variant="secondary" 
+             className="text-[10px] bg-primary/10 text-primary hover:bg-primary/20 cursor-pointer h-5" 
+             onClick={(e) => {
+               e.stopPropagation();
+               priorities.forEach(p => priorityFilter.includes(p) && togglePriority(p));
+             }}
+           >
+             Clear
+           </Badge>
+        ) : undefined}
+      >
         <div className="space-y-2">
           {priorities.map((p) => (
             <div key={p} className="flex items-center space-x-2">
@@ -45,26 +57,14 @@ export function FilterGroups() {
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-muted-foreground hover:text-foreground cursor-pointer flex-1 flex justify-between"
               >
                 {p}
-                {/* Optional: Add counts here if available */}
               </Label>
             </div>
           ))}
         </div>
-        {priorityFilter.length > 0 && (
-           <div className="pt-1">
-             <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary hover:bg-primary/20 cursor-pointer" onClick={() => priorities.forEach(p => priorityFilter.includes(p) && togglePriority(p))}>
-               Reset Severity
-             </Badge>
-           </div>
-        )}
-      </div>
+      </CollapsibleFilter>
 
       {/* Date Filter */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 pb-1">
-          <Calendar className="w-4 h-4 text-primary" />
-          <h3 className="font-semibold text-sm text-foreground">Time Range</h3>
-        </div>
+      <CollapsibleFilter title="Time Range" icon={Calendar}>
         <div className="space-y-1">
           {dateOptions.map((opt) => (
             <div 
@@ -81,8 +81,7 @@ export function FilterGroups() {
             </div>
           ))}
         </div>
-      </div>
+      </CollapsibleFilter>
     </div>
   );
 }
-

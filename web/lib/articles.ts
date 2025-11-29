@@ -91,6 +91,7 @@ function mapDBToArticle(db: DBArticleAnalysis): Article {
     verificationNote: `Analyzed by ${db.model_used} on ${new Date(db.analyzed_at || "").toLocaleDateString()}`,
     
     regions: db.regions ?? [],
+    thumbnail: (db.news_articles as any)?.thumbnail || null,
   };
 }
 
@@ -102,7 +103,8 @@ export async function fetchArticles(): Promise<Article[]> {
       *,
       news_articles (
         source,
-        timestamp
+        timestamp,
+        thumbnail
       )
     `
     )
@@ -125,7 +127,8 @@ export async function fetchArticleById(id: string): Promise<Article | null> {
       *,
       news_articles (
         source,
-        timestamp
+        timestamp,
+        thumbnail
       )
     `
     )

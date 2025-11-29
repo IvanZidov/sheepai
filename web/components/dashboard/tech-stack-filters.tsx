@@ -6,6 +6,8 @@ import { fetchAvailableTech, TechFilter } from "@/lib/dashboard-data";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { CollapsibleFilter } from "@/components/dashboard/collapsible-filter";
+import { Layers } from "lucide-react";
 
 export function TechStackFilters() {
   const { techStack, toggleTech } = useUserPreferences();
@@ -20,14 +22,15 @@ export function TechStackFilters() {
   }, []);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground">My Tech Stack</h3>
+    <CollapsibleFilter 
+      title="My Tech Stack" 
+      icon={Layers} 
+      badge={
         <Badge variant="secondary" className="text-[10px] bg-muted text-muted-foreground font-mono">
-          {techStack.length} SELECTED
+          {techStack.length}
         </Badge>
-      </div>
-      
+      }
+    >
       <ScrollArea className="h-[300px] pr-4">
         <div className="space-y-3">
           {loading ? (
@@ -62,6 +65,6 @@ export function TechStackFilters() {
           )}
         </div>
       </ScrollArea>
-    </div>
+    </CollapsibleFilter>
   );
 }

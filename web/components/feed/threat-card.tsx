@@ -60,36 +60,49 @@ export function ThreatCard({ article, onVerify }: ThreatCardProps) {
   };
 
   return (
-    <Link href={`/article/${article.id}`}>
-      <Card className="group relative overflow-hidden border border-border bg-card transition-all hover:shadow-md hover:border-primary/50">
+    <Link href={`/article/${article.id}`} className="h-full">
+      <Card className="group relative overflow-hidden border border-border bg-card transition-all hover:shadow-md hover:border-primary/50 h-full flex flex-col">
         
         {/* Priority Stripe */}
         <div className={cn("absolute left-0 top-0 bottom-0 w-1", config.border.replace("border-", "bg-"))} />
 
-        <CardHeader className="pb-3 pl-5">
-          <div className="flex justify-between items-start gap-4">
-            <div className="space-y-2 flex-1">
+        {/* Image Thumbnail */}
+        {article.thumbnail && (
+           <div className="relative h-32 w-full overflow-hidden bg-muted">
+              <img 
+                src={article.thumbnail} 
+                alt={article.headline}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent" />
+              
+              <div className="absolute bottom-2 left-4 right-4 flex justify-between items-end">
+                 <div className="flex gap-1">
+                    {article.regions?.map((r, i) => (
+                       <span key={i} title={r.region} className="text-sm drop-shadow-md">{r.flag}</span>
+                    ))}
+                 </div>
+              </div>
+           </div>
+        )}
+
+        <CardHeader className={cn("pb-2 pl-5 pr-4", article.thumbnail ? "pt-3" : "pt-4")}>
+          <div className="flex justify-between items-start gap-3">
+            <div className="space-y-2 flex-1 min-w-0">
               {/* Meta Row */}
               <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 border-0 font-mono uppercase tracking-wider gap-1", config.bg, config.text)}>
+                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 border-0 font-mono uppercase tracking-wider gap-1 shrink-0", config.bg, config.text)}>
                   {config.icon}
                   {article.priority}
                 </Badge>
 
-                {article.regions?.map((r, i) => (
-                   <span key={i} title={r.region} className="text-sm cursor-help grayscale hover:grayscale-0 transition-all">{r.flag}</span>
-                ))}
-
-                <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider">
-                  {article.source} • {new Date(article.publishedAt).toLocaleDateString()}
+                <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider truncate">
+                  {article.source} • {new Date(article.publishedAt).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' })}
                 </span>
-
-                {article.is_sponsored && (
-                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-0">Sponsored</Badge>
-                )}
               </div>
 
-              <h3 className="font-heading font-semibold text-lg leading-snug group-hover:text-primary transition-colors">
+              <h3 className="font-heading font-semibold text-base leading-snug group-hover:text-primary transition-colors line-clamp-2">
                 {article.headline}
               </h3>
             </div>
@@ -97,79 +110,58 @@ export function ThreatCard({ article, onVerify }: ThreatCardProps) {
             {/* Relevance Score Circle */}
             <div className="shrink-0 flex flex-col items-center">
                <div className={cn(
-                 "flex items-center justify-center w-10 h-10 rounded-full border-2 font-bold text-xs",
+                 "flex items-center justify-center w-8 h-8 rounded-full border-2 font-bold text-[10px]",
                  article.relevance_score >= 8 ? "border-emerald-500 text-emerald-500" : 
                  article.relevance_score >= 5 ? "border-yellow-500 text-yellow-500" : "border-muted text-muted-foreground"
                )}>
                  {article.relevance_score}
                </div>
-               <span className="text-[9px] text-muted-foreground uppercase mt-1 font-mono">Score</span>
             </div>
           </div>
         </CardHeader>
 
-        <CardContent className="pb-3 pl-5">
-          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+        <CardContent className="pb-3 pl-5 pr-4 flex-1">
+          <p className="text-xs text-muted-foreground line-clamp-3 mb-3">
             {article.short_summary}
           </p>
 
-          {/* Compact Key Takeaways */}
-          <div className="space-y-1">
-            {article.key_takeaways.slice(0, 2).map((item, i) => (
-              <div key={i} className="flex items-start gap-2 text-xs text-muted-foreground/80">
-                <div className="mt-1.5 w-1 h-1 rounded-full bg-primary/50 shrink-0" />
-                <span className={item.highlight ? "text-foreground" : ""}>{item.point}</span>
-              </div>
-            ))}
-          </div>
+          {/* Compact Key Takeaways - Only show if no thumbnail to save space, or just 1 */}
+          {!article.thumbnail && (
+            <div className="space-y-1 mt-auto">
+                {article.key_takeaways.slice(0, 1).map((item, i) => (
+                <div key={i} className="flex items-start gap-2 text-[10px] text-muted-foreground/80">
+                    <div className="mt-1 w-1 h-1 rounded-full bg-primary/50 shrink-0" />
+                    <span className={item.highlight ? "text-foreground" : ""}>{item.point}</span>
+                </div>
+                ))}
+            </div>
+          )}
         </CardContent>
 
-        <CardFooter className="pl-5 pt-0 pb-4 flex items-center justify-between">
-           <div className="flex gap-1.5 overflow-hidden mask-image-linear-to-r from-black to-transparent w-full mr-4">
-              {article.categories.slice(0, 3).map(cat => (
+        <CardFooter className="pl-5 pr-4 pt-0 pb-3 flex items-center justify-between mt-auto border-t border-border/50 pt-2">
+           <div className="flex gap-1 overflow-hidden w-full mr-2">
+              {article.categories.slice(0, 2).map(cat => (
                   <Badge 
                       key={cat} 
                       variant="secondary" 
-                      className="text-[10px] px-2 h-5 font-mono text-muted-foreground bg-muted/50 hover:bg-muted whitespace-nowrap"
+                      className="text-[9px] px-1.5 h-4 font-mono text-muted-foreground bg-muted/50 hover:bg-muted whitespace-nowrap"
                   >
                       {cat.replace(/_/g, ' ')}
                   </Badge>
               ))}
            </div>
 
-           <div className="flex gap-1 shrink-0">
-             <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8 text-muted-foreground hover:text-primary"
-                onClick={(e) => {
-                    e.preventDefault(); 
-                    // Discuss logic
-                }}
-             >
-                <MessageSquare className="w-4 h-4" />
-             </Button>
-             <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8 text-muted-foreground hover:text-primary"
-                 onClick={(e) => {
-                    e.preventDefault(); 
-                    // Share logic
-                }}
-             >
-                <Share2 className="w-4 h-4" />
-             </Button>
+           <div className="flex gap-0.5 shrink-0">
              <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-primary group/verify"
+                  className="h-7 gap-1 text-[10px] text-muted-foreground hover:text-primary group/verify px-2"
                   onClick={handleVerify}
                   disabled={isVerifying}
                 >
-                    <Sparkles className={cn("w-3.5 h-3.5 transition-all group-hover/verify:text-amber-400", isVerifying && "animate-spin")} />
+                    <Sparkles className={cn("w-3 h-3 transition-all group-hover/verify:text-amber-400", isVerifying && "animate-spin")} />
                     <span className={cn(isVerifying && "animate-pulse")}>
-                      {isVerifying ? "Checking..." : "Check"}
+                      {isVerifying ? "Check" : "Check"}
                     </span>
              </Button>
            </div>

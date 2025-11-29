@@ -12,6 +12,22 @@ export interface TrendingTag {
   count: number;
 }
 
+export interface PriorityAction {
+  id: string;
+  action: string;
+  priority: string;
+  target_audience: string;
+  article_id: string;
+  article_headline: string;
+  analyzed_at: string;
+}
+
+export interface TargetedEntity {
+  name: string;
+  count: number;
+  type: string;
+}
+
 export async function fetchThreatPulseData(): Promise<ThreatCategory[]> {
   // Get counts for key threat categories
   const { data, error } = await supabase.rpc("get_threat_pulse");
@@ -161,3 +177,79 @@ export async function fetchTrendingTags(): Promise<TrendingTag[]> {
   return sorted;
 }
 
+export async function fetchPriorityActions(): Promise<PriorityAction[]> {
+  // Fetch recent high/critical articles
+  const { data, error } = await supabase
+    .from("article_analyses")
+    .select("id, headline, action_items, analyzed_at")
+    .in("priority", ["CRITICAL", "HIGH"])
+    .order("analyzed_at", { ascending: false })
+    .limit(30); // Limit to recent critical items
+
+  if (error || !data) {
+    console.error("Error fetching priority actions:", error);
+    return [];
+  }
+
+  const actions: PriorityAction[] = [];
+  
+  data.forEach(article => {
+    const items = article.action_items as any[];
+    if (!items) return;
+
+    // Filter for immediate/soon actions
+    items.filter(item => item.priority === "immediate").forEach((item, idx) => {
+      actions.push({
+        id: `${article.id}-${idx}`,
+        action: item.action,
+        priority: item.priority,
+        target_audience: item.target_audience,
+        article_id: article.id,
+        article_headline: article.headline,
+        analyzed_at: article.analyzed_at || ""
+      });
+    });
+  });
+
+  // Return top 5 immediate actions
+  return actions.slice(0, 5);
+}
+
+export async function fetchTopTargeted(): Promise<TargetedEntity[]> {
+  const { data, error } = await supabase
+    .from("article_analyses")
+    .select("affected_entities")
+    .order("analyzed_at", { ascending: false })
+    .limit(100);
+
+  if (error || !data) {
+    console.error("Error fetching top targeted:", error);
+    return [];
+  }
+
+  const entityMap: Record<string, { count: number, type: string }> = {};
+
+  data.forEach(article => {
+    const entities = article.affected_entities as any[];
+    if (!entities) return;
+
+    entities.forEach(entity => {
+      if (["company", "product", "platform"].includes(entity.entity_type)) {
+        const name = entity.name;
+        if (!entityMap[name]) {
+          entityMap[name] = { count: 0, type: entity.entity_type };
+        }
+        entityMap[name].count++;
+      }
+    });
+  });
+
+  return Object.entries(entityMap)
+    .sort((a, b) => b[1].count - a[1].count)
+    .slice(0, 8)
+    .map(([name, info]) => ({
+      name,
+      count: info.count,
+      type: info.type
+    }));
+}

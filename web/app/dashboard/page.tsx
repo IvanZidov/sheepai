@@ -6,10 +6,9 @@ import { ShepherdNav } from "@/components/layout/shepherd-nav";
 import { ThreatCard } from "@/components/feed/threat-card";
 import { ShepherdChat } from "@/components/chat/shepherd-chat";
 import { TechStackFilters } from "@/components/dashboard/tech-stack-filters";
-import { AlertThreshold } from "@/components/dashboard/alert-threshold";
-import { ThreatPulse, TrendingTags } from "@/components/dashboard/threat-pulse";
 import { FeedToolbar } from "@/components/dashboard/feed-toolbar";
 import { FilterGroups } from "@/components/dashboard/filter-groups";
+import { TargetedEntitiesFilter } from "@/components/dashboard/targeted-entities-filter";
 import { useUserPreferences } from "@/lib/user-preferences";
 import { fetchArticles, verifyArticle } from "@/lib/articles";
 import { Article, Priority } from "@/lib/types";
@@ -25,7 +24,8 @@ export default function DashboardPage() {
     alertThreshold, 
     searchQuery, 
     dateRange, 
-    priorityFilter, 
+    priorityFilter,
+    targetedEntities,
     sortBy, 
     resetFilters 
   } = useUserPreferences();
@@ -78,7 +78,13 @@ export default function DashboardPage() {
       return false;
     }
 
-    // 5. Check Tech Stack Match
+    // 5. Targeted Entities Filter
+    if (targetedEntities.length > 0) {
+       const hasEntity = article.affected_entities.some(e => targetedEntities.includes(e.name));
+       if (!hasEntity) return false;
+    }
+
+    // 6. Check Tech Stack Match
     // If user has no stack selected, show everything
     if (techStack.length === 0) return true;
 
@@ -109,28 +115,38 @@ export default function DashboardPage() {
 
   const filters = (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 pb-2 border-b border-border">
-        <Filter className="w-4 h-4 text-emerald-500" />
-        <h2 className="font-semibold text-sm text-foreground">Filters</h2>
+      <div className="flex items-center justify-between pb-2 border-b border-border">
+        <div className="flex items-center gap-2">
+          <Filter className="w-4 h-4 text-emerald-500" />
+          <h2 className="font-semibold text-sm text-foreground">Filters</h2>
+        </div>
+        <Button 
+          variant="ghost" 
+          className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
+          onClick={() => resetFilters()}
+        >
+          Clear All
+        </Button>
       </div>
       <FilterGroups />
+      <TargetedEntitiesFilter />
       <TechStackFilters />
-      <AlertThreshold />
     </div>
   );
 
-  const visuals = (
-    <div className="space-y-6">
-      <ThreatPulse />
-      <TrendingTags />
-    </div>
-  );
+  // No visuals for now, or we can put back the pulse if needed, 
+  // but the user asked to remove "this" (new widgets). 
+  // So I will leave visuals undefined or empty to remove the right sidebar or keep it minimal.
+  // The DashboardShell will hide the right sidebar if visuals is null/undefined?
+  // Let's check DashboardShell. 
+  // It renders aside hidden xl:block. If visuals is empty, it will be an empty aside.
+  // Let's pass null.
 
   return (
     <div className="min-h-screen bg-background font-sans selection:bg-emerald-500/20 selection:text-emerald-500">
       <ShepherdNav />
       
-      <DashboardShell filters={filters} visuals={visuals}>
+      <DashboardShell filters={filters} visuals={null}>
           <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
               <h1 className="text-2xl font-bold text-foreground font-heading">My Feed</h1>
@@ -141,15 +157,19 @@ export default function DashboardPage() {
 
             <FeedToolbar />
 
-            <div className="space-y-6 pb-20">
+            <div className="pb-20">
               {loading ? (
-                  Array.from({length: 3}).map((_, i) => (
-                      <div key={i} className="h-64 rounded-xl bg-muted/50 border border-border animate-pulse" />
-                  ))
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {Array.from({length: 6}).map((_, i) => (
+                        <div key={i} className="h-80 rounded-xl bg-muted/50 border border-border animate-pulse" />
+                    ))}
+                  </div>
               ) : filteredArticles.length > 0 ? (
-                  filteredArticles.map(article => (
-                      <ThreatCard key={article.id} article={article} onVerify={onVerify} />
-                  ))
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {filteredArticles.map(article => (
+                        <ThreatCard key={article.id} article={article} onVerify={onVerify} />
+                    ))}
+                  </div>
               ) : (
                   <div className="text-center py-20 bg-muted/30 rounded-xl border border-border border-dashed">
                       <h3 className="text-foreground font-medium mb-2">All Quiet on the Western Front</h3>

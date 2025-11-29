@@ -92,6 +92,7 @@ export interface Article extends ArticleAnalysis {
   title?: string;
   verificationStatus: VerificationStatus;
   verificationNote?: string;
+  thumbnail?: string;
   
   // Geographic regions affected
   regions: Region[];

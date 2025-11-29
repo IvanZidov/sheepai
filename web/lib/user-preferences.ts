@@ -15,6 +15,7 @@ export interface UserPreferences {
   searchQuery: string;
   dateRange: DateRange;
   priorityFilter: Priority[]; // Empty means all
+  targetedEntities: string[]; // Empty means all
   sortBy: SortOption;
 
   // Actions
@@ -25,6 +26,7 @@ export interface UserPreferences {
   setSearchQuery: (query: string) => void;
   setDateRange: (range: DateRange) => void;
   togglePriority: (priority: Priority) => void;
+  toggleEntity: (entity: string) => void;
   setSortBy: (sort: SortOption) => void;
   
   resetFilters: () => void;
@@ -41,6 +43,7 @@ export const useUserPreferences = create<UserPreferences>()(
       searchQuery: "",
       dateRange: "all",
       priorityFilter: [],
+      targetedEntities: [],
       sortBy: "newest",
 
       toggleTech: (tech) => set((state) => {
@@ -68,6 +71,15 @@ export const useUserPreferences = create<UserPreferences>()(
             : [...state.priorityFilter, priority]
         };
       }),
+
+      toggleEntity: (entity) => set((state) => {
+        const exists = state.targetedEntities.includes(entity);
+        return {
+          targetedEntities: exists 
+            ? state.targetedEntities.filter(e => e !== entity)
+            : [...state.targetedEntities, entity]
+        };
+      }),
       
       setSortBy: (sort) => set({ sortBy: sort }),
 
@@ -77,6 +89,7 @@ export const useUserPreferences = create<UserPreferences>()(
         searchQuery: "", 
         dateRange: "all", 
         priorityFilter: [],
+        targetedEntities: [],
         sortBy: "newest" 
       }),
     }),
