@@ -14,17 +14,19 @@ import {
   Loader2, Building2, Sparkles, Check, AlertCircle, 
   Globe, Tag, Cpu, Shield, Users, X, Link2, Briefcase,
   Target, Zap, ChevronRight, Settings2, User,
-  Lock, Hash, Building, Package, ArrowRight, Plug
+  Lock, Hash, Building, Package, ArrowRight, Plug, Bell
 } from 'lucide-react';
 import { SlackConnection } from "@/components/dashboard/slack-connection";
 import { ShepherdNav } from "@/components/layout/shepherd-nav";
+import { SubscriptionList } from "@/components/dashboard/subscription-list";
+import { CreateSubscriptionDialog } from "@/components/dashboard/create-subscription-dialog";
 import { useAuth } from "@/contexts/auth-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUserPreferences } from "@/lib/user-preferences";
 import { analyzeCompanyProfile, CompanyProfileResponse } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
-type SettingsTab = 'personalization' | 'integrations' | 'account' | 'security';
+type SettingsTab = 'personalization' | 'notifications' | 'integrations' | 'account' | 'security';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -156,6 +158,7 @@ export default function SettingsPage() {
 
   const tabs = [
     { id: 'personalization' as const, label: 'Feed Personalization', icon: Sparkles },
+    { id: 'notifications' as const, label: 'My Subscriptions', icon: Bell },
     { id: 'integrations' as const, label: 'Integrations', icon: Plug },
     { id: 'account' as const, label: 'Account', icon: User },
     ...(isEmailProvider ? [{ id: 'security' as const, label: 'Security', icon: Lock }] : []),
@@ -275,14 +278,26 @@ export default function SettingsPage() {
                           <span className="font-medium">Filters applied! Redirecting to feed...</span>
                         </div>
                       ) : (
+                        <div className="space-y-2 mt-4">
                         <Button 
                           onClick={handleApplyFilters}
-                          className="w-full mt-4 bg-emerald-600 hover:bg-emerald-500"
+                            className="w-full bg-emerald-600 hover:bg-emerald-500"
                         >
                           <Zap className="w-4 h-4 mr-2" />
                           Apply Filters to Feed
                           <ArrowRight className="w-4 h-4 ml-2" />
                         </Button>
+
+                          <div className="flex items-center gap-2">
+                            <div className="h-px flex-1 bg-border/50"></div>
+                            <span className="text-xs text-muted-foreground font-medium">OR</span>
+                            <div className="h-px flex-1 bg-border/50"></div>
+                          </div>
+                          
+                          <div className="w-full">
+                             <CreateSubscriptionDialog />
+                          </div>
+                        </div>
                       )}
                     </CardContent>
                   </Card>
@@ -605,6 +620,28 @@ export default function SettingsPage() {
                   </Card>
                 )}
               </>
+            )}
+
+            {/* Notifications Tab */}
+            {activeTab === 'notifications' && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold">My Subscriptions</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Manage your email and Slack alerts
+                    </p>
+                  </div>
+                  <CreateSubscriptionDialog />
+                </div>
+
+                <SubscriptionList />
+
+                <div className="mt-8 pt-8 border-t">
+                  <h3 className="text-sm font-medium mb-4">Delivery Channels</h3>
+                  <SlackConnection />
+                </div>
+              </div>
             )}
 
             {/* Integrations Tab */}

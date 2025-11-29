@@ -1,11 +1,21 @@
 import { supabase } from "./supabase/client";
 import { UserPreferences } from "./user-preferences";
+import { Priority } from "./types";
+
+export interface SubscriptionFilters {
+  techStack?: string[];
+  alertThreshold?: number;
+  priority?: Priority[];
+  priorityFilter?: Priority[]; // Legacy key
+  targetedEntities?: string[];
+  searchQuery?: string;
+}
 
 export interface Subscription {
   id: string;
   user_id: string;
   name: string;
-  filters: Partial<UserPreferences>; // Storing relevant preferences as filters
+  filters: SubscriptionFilters;
   channels: string[]; // ['email', 'slack']
   frequency: 'immediate' | 'daily' | 'weekly';
   is_active: boolean;

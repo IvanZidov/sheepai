@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel 
 } from "@/components/ui/dropdown-menu";
+import { CreateSubscriptionDialog } from "@/components/dashboard/create-subscription-dialog";
 import { useUserPreferences, SortOption } from "@/lib/user-preferences";
 import { Search, ArrowUpDown, Calendar, Zap, Star, Sparkles, X } from "lucide-react";
 
@@ -54,6 +55,8 @@ export function FeedToolbar() {
           </div>
         )}
       </div>
+      
+      <CreateSubscriptionDialog />
       
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

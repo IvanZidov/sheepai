@@ -216,7 +216,7 @@ export function SlackConnection({ onStatusChange }: SlackConnectionProps) {
               <ul className="text-sm text-muted-foreground space-y-1">
                 <li className="flex items-center gap-2">
                   <Check className="w-3 h-3 text-emerald-500" />
-                  Real-time security alerts in your channel
+                  Real-time alerts for subscribed filters
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-3 h-3 text-emerald-500" />
