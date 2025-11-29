@@ -9,7 +9,7 @@ import { TechStackFilters } from "@/components/dashboard/tech-stack-filters";
 import { AlertThreshold } from "@/components/dashboard/alert-threshold";
 import { ThreatPulse, TrendingTags } from "@/components/dashboard/threat-pulse";
 import { useUserPreferences } from "@/lib/user-preferences";
-import { fetchArticles, verifyArticle } from "@/lib/mock-data";
+import { fetchArticles, verifyArticle } from "@/lib/articles";
 import { Article } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Filter } from "lucide-react";
@@ -53,14 +53,8 @@ export default function DashboardPage() {
        false
     );
     
-    // Also allow CRITICAL items through regardless of stack? 
-    // Specs say "Monday morning... sees Python supply chain attack". 
-    // Implies strict filtering, but maybe we should always show criticals?
-    // Let's stick to strict filtering but maybe highlighting. 
-    // Actually, let's include CRITICAL priority always as a safety net?
-    // The user query said "filtered for YOUR tech stack", so strict filtering is safer for "noise reduction".
-    // However, if I have a Critical item in mock data that doesn't match the default stack, it might disappear.
-    // I'll add a loose match for now: if it matches stack OR is priority CRITICAL.
+    // Always show CRITICAL priority items regardless of tech stack filter
+    // This ensures critical security alerts are never missed
     
     const isCritical = article.priority === "CRITICAL";
     

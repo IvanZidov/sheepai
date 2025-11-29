@@ -15,7 +15,7 @@ export interface UserPreferences {
 export const useUserPreferences = create<UserPreferences>()(
   persist(
     (set) => ({
-      techStack: ["AWS", "Python", "Node.js"], // Defaults
+      techStack: ["Python", "JavaScript", "PowerShell"], // Defaults based on common threats
       alertThreshold: 70,
       notifications: true,
 
@@ -37,17 +37,4 @@ export const useUserPreferences = create<UserPreferences>()(
     }
   )
 );
-
-export const AVAILABLE_TECH = [
-  { id: "AWS", label: "AWS" },
-  { id: "Azure", label: "Azure" },
-  { id: "GCP", label: "GCP" },
-  { id: "Python", label: "Python" },
-  { id: "Node.js", label: "Node.js" },
-  { id: "React", label: "React" },
-  { id: "Docker", label: "Docker" },
-  { id: "Kubernetes", label: "Kubernetes" },
-  { id: "PostgreSQL", label: "PostgreSQL" },
-  { id: "Redis", label: "Redis" },
-];
 

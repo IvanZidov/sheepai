@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from "react";
 import { ShepherdNav } from "@/components/layout/shepherd-nav";
 import { ShepherdChat } from "@/components/chat/shepherd-chat";
-import { fetchArticles } from "@/lib/mock-data";
+import { fetchArticles } from "@/lib/articles";
 import { Article } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
