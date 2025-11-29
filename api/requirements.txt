@@ -12,5 +12,3 @@ uvicorn[standard]
 apscheduler
 elevenlabs
 firecrawl-py
-sib-api-v3-sdk
-pydantic[email]
