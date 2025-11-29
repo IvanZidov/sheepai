@@ -14,3 +14,5 @@ elevenlabs
 firecrawl-py
 sib-api-v3-sdk
 pydantic[email]
+slack_sdk
+PyJWT

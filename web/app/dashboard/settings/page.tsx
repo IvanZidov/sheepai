@@ -14,8 +14,9 @@ import {
   Loader2, Building2, Sparkles, Check, AlertCircle, 
   Globe, Tag, Cpu, Shield, Users, X, Link2, Briefcase,
   Target, Zap, ChevronRight, Settings2, User,
-  Lock, Hash, Building, Package, ArrowRight
+  Lock, Hash, Building, Package, ArrowRight, Plug
 } from 'lucide-react';
+import { SlackConnection } from "@/components/dashboard/slack-connection";
 import { ShepherdNav } from "@/components/layout/shepherd-nav";
 import { useAuth } from "@/contexts/auth-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -23,7 +24,7 @@ import { useUserPreferences } from "@/lib/user-preferences";
 import { analyzeCompanyProfile, CompanyProfileResponse } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
-type SettingsTab = 'personalization' | 'account' | 'security';
+type SettingsTab = 'personalization' | 'integrations' | 'account' | 'security';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -155,6 +156,7 @@ export default function SettingsPage() {
 
   const tabs = [
     { id: 'personalization' as const, label: 'Feed Personalization', icon: Sparkles },
+    { id: 'integrations' as const, label: 'Integrations', icon: Plug },
     { id: 'account' as const, label: 'Account', icon: User },
     ...(isEmailProvider ? [{ id: 'security' as const, label: 'Security', icon: Lock }] : []),
   ];
@@ -603,6 +605,31 @@ export default function SettingsPage() {
                   </Card>
                 )}
               </>
+            )}
+
+            {/* Integrations Tab */}
+            {activeTab === 'integrations' && (
+              <div className="space-y-6">
+                <div className="mb-2">
+                  <h2 className="text-lg font-semibold">Integrations</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Connect external services to receive notifications
+                  </p>
+                </div>
+                
+                <SlackConnection />
+                
+                {/* Placeholder for future integrations */}
+                <Card className="border-dashed">
+                  <CardContent className="flex items-center justify-center py-8 text-muted-foreground">
+                    <div className="text-center">
+                      <Plug className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">More integrations coming soon</p>
+                      <p className="text-xs mt-1">Discord, Microsoft Teams, Webhooks</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             )}
 
             {/* Account Tab */}

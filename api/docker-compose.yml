@@ -19,6 +19,12 @@ services:
       # Email (Brevo)
       - BREVO_API_KEY=${BREVO_API_KEY}
       - EMAIL_FROM_ADDRESS=${EMAIL_FROM_ADDRESS:-ivan@textvalue.ai}
+      # Slack
+      - SLACK_CLIENT_ID=${SLACK_CLIENT_ID}
+      - SLACK_CLIENT_SECRET=${SLACK_CLIENT_SECRET}
+      - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
+      # FRONTEND_URL
+      - FRONTEND_URL=${FRONTEND_URL:-https://cybershepherd.app}
       # API Config
       - SCRAPE_INTERVAL_HOURS=${SCRAPE_INTERVAL_HOURS:-1}
       - MAX_CONCURRENT=${MAX_CONCURRENT:-5}

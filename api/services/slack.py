@@ -1,8 +1,19 @@
 """
 Slack Message Formatting Service
+Handles OAuth, message formatting, and posting to Slack.
 """
 
+import logging
+from typing import Dict, List, Any, Optional
+
+import httpx
+from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
+
+from ..config import SLACK_CLIENT_ID, SLACK_CLIENT_SECRET, SLACK_REDIRECT_URI
 from ..models.article import ArticleAnalysis, REGION_FLAGS
+
+logger = logging.getLogger(__name__)
 
 
 PRIORITY_META = {
@@ -255,4 +266,203 @@ def format_slack_text(analysis: ArticleAnalysis, article_url: str = "") -> str:
         lines.append(f"<{article_url}|📖 Read Full Article>")
     
     return "\n".join(lines)
+
+
+# ============================================================================
+# OAuth Functions
+# ============================================================================
+
+async def exchange_code_for_token(code: str) -> Dict[str, Any]:
+    """
+    Exchange OAuth authorization code for access token.
+    
+    Args:
+        code: The authorization code from Slack OAuth callback
+        
+    Returns:
+        Dict containing access_token, team_id, team_name, bot_user_id, scope
+        
+    Raises:
+        Exception if token exchange fails
+    """
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "https://slack.com/api/oauth.v2.access",
+            data={
+                "client_id": SLACK_CLIENT_ID,
+                "client_secret": SLACK_CLIENT_SECRET,
+                "code": code,
+                "redirect_uri": SLACK_REDIRECT_URI,
+            },
+        )
+        
+        data = response.json()
+        
+        if not data.get("ok"):
+            error = data.get("error", "Unknown error")
+            logger.error(f"Slack OAuth token exchange failed: {error}")
+            raise Exception(f"Slack OAuth failed: {error}")
+        
+        return {
+            "access_token": data["access_token"],
+            "team_id": data["team"]["id"],
+            "team_name": data["team"].get("name"),
+            "bot_user_id": data.get("bot_user_id"),
+            "scope": data.get("scope"),
+        }
+
+
+async def list_user_channels(access_token: str) -> List[Dict[str, str]]:
+    """
+    List available Slack channels using the bot token.
+    
+    Args:
+        access_token: Slack bot access token
+        
+    Returns:
+        List of channel dicts with id, name, is_private
+    """
+    client = WebClient(token=access_token)
+    channels = []
+    
+    try:
+        # Get public channels
+        result = client.conversations_list(
+            types="public_channel,private_channel",
+            exclude_archived=True,
+            limit=200,
+        )
+        
+        for channel in result.get("channels", []):
+            channels.append({
+                "id": channel["id"],
+                "name": channel["name"],
+                "is_private": channel.get("is_private", False),
+            })
+        
+        # Sort by name
+        channels.sort(key=lambda x: x["name"])
+        
+    except SlackApiError as e:
+        logger.error(f"Failed to list Slack channels: {e.response['error']}")
+        raise Exception(f"Failed to list channels: {e.response['error']}")
+    
+    return channels
+
+
+def send_slack_message(
+    access_token: str,
+    channel_id: str,
+    blocks: List[Dict[str, Any]],
+    text: Optional[str] = None,
+) -> bool:
+    """
+    Send a message to a Slack channel.
+    
+    Args:
+        access_token: Slack bot access token
+        channel_id: Target channel ID
+        blocks: Slack Block Kit blocks
+        text: Fallback text (optional)
+        
+    Returns:
+        True if successful, False otherwise
+    """
+    client = WebClient(token=access_token)
+    
+    try:
+        client.chat_postMessage(
+            channel=channel_id,
+            blocks=blocks,
+            text=text or "New security alert from CyberShepherd",
+        )
+        logger.info(f"Slack message sent to channel {channel_id}")
+        return True
+        
+    except SlackApiError as e:
+        logger.error(f"Failed to send Slack message: {e.response['error']}")
+        return False
+
+
+def format_notification_blocks(article: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """
+    Format an article dict (from database) into Slack Block Kit blocks.
+    This is a simplified version for notifications from stored data.
+    
+    Args:
+        article: Article data dict from database
+        
+    Returns:
+        List of Slack Block Kit blocks
+    """
+    priority = article.get("priority", "INFO").upper()
+    priority_emoji = PRIORITY_META.get(priority.lower(), {}).get("emoji", "🔵")
+    
+    headline = article.get("headline", "New Alert")
+    short_summary = article.get("short_summary", "")
+    article_url = article.get("article_url", "")
+    relevance_score = article.get("relevance_score", 0)
+    
+    # Build key takeaways text
+    takeaways = article.get("key_takeaways", [])
+    takeaways_text = ""
+    for t in takeaways[:3]:  # Limit to 3 for notifications
+        point = t.get("point", "") if isinstance(t, dict) else str(t)
+        takeaways_text += f"• {point}\n"
+    
+    # Build technologies text
+    technologies = article.get("mentioned_technologies", [])[:5]
+    tech_text = " ".join([f"`{t}`" for t in technologies]) if technologies else ""
+    
+    blocks = [
+        {
+            "type": "header",
+            "text": {
+                "type": "plain_text",
+                "text": f"{priority_emoji} {headline[:100]}",
+                "emoji": True,
+            }
+        },
+        {
+            "type": "context",
+            "elements": [
+                {"type": "mrkdwn", "text": f"*Priority:* {priority}"},
+                {"type": "mrkdwn", "text": f"*Relevance:* {relevance_score}/10"},
+            ]
+        },
+        {"type": "divider"},
+        {
+            "type": "section",
+            "text": {"type": "mrkdwn", "text": f"*📝 Summary*\n{short_summary}"}
+        },
+    ]
+    
+    if takeaways_text:
+        blocks.append({
+            "type": "section",
+            "text": {"type": "mrkdwn", "text": f"*🎯 Key Takeaways*\n{takeaways_text}"}
+        })
+    
+    if tech_text:
+        blocks.append({
+            "type": "section",
+            "text": {"type": "mrkdwn", "text": f"*🔧 Technologies:* {tech_text}"}
+        })
+    
+    blocks.append({"type": "divider"})
+    
+    # CTA Button
+    if article_url:
+        blocks.append({
+            "type": "section",
+            "text": {"type": "mrkdwn", "text": "_From CyberShepherd News_"},
+            "accessory": {
+                "type": "button",
+                "text": {"type": "plain_text", "text": "📖 Read Full Article", "emoji": True},
+                "url": article_url,
+                "style": "primary" if priority in ["CRITICAL", "HIGH"] else None,
+            }
+        })
+    
+    return blocks
 

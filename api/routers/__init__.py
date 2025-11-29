@@ -3,6 +3,7 @@ from .analysis import router as analysis_router
 from .scheduler import router as scheduler_router
 from .company import router as company_router
 from .notifications import router as notifications_router
+from .slack import router as slack_router
 
-__all__ = ["articles_router", "analysis_router", "scheduler_router", "company_router", "notifications_router"]
+__all__ = ["articles_router", "analysis_router", "scheduler_router", "company_router", "notifications_router", "slack_router"]
 

@@ -28,3 +28,12 @@ EMAIL_FROM_ADDRESS = os.getenv("EMAIL_FROM_ADDRESS", "noreply@yourdomain.com")
 HACKERNEWS_URL = "https://thehackernews.com/"
 SCRAPE_INTERVAL_HOURS = int(os.getenv("SCRAPE_INTERVAL_HOURS", "1"))
 REQUEST_DELAY = float(os.getenv("REQUEST_DELAY", "1.5"))
+
+# Slack OAuth
+SLACK_CLIENT_ID = os.getenv("SLACK_CLIENT_ID")
+SLACK_CLIENT_SECRET = os.getenv("SLACK_CLIENT_SECRET")
+SLACK_REDIRECT_URI = os.getenv("SLACK_REDIRECT_URI", "http://localhost:8000/slack/callback")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+
+# JWT Secret for Slack OAuth State
+JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key-change-in-production")

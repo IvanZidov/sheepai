@@ -12,7 +12,7 @@ from typing import List, Dict, Any
 from ..config import BREVO_API_KEY, EMAIL_FROM_ADDRESS
 from ..database import get_supabase
 from ..models.article import ArticleAnalysis
-# from .slack import format_slack_message, format_slack_text # Keeping for future use
+from .slack import send_slack_message, format_notification_blocks
 
 logger = logging.getLogger(__name__)
 
@@ -158,7 +158,9 @@ def process_notifications(articles: List[Dict[str, Any]]):
 
         channels = sub.get("channels", [])
         user_email = sub.get("users", {}).get("email")
+        user_id = sub.get("user_id")
 
+        # Send Email notifications
         if "email" in channels and user_email:
             subject = f"🚨 {len(matches)} New Security Alert{'s' if len(matches) > 1 else ''}: {matches[0].get('headline')}"
             html_body = f"""
@@ -169,6 +171,58 @@ def process_notifications(articles: List[Dict[str, Any]]):
             <p style="font-size: 12px; color: #666;">Manage your subscriptions in your dashboard.</p>
             """
             send_email(user_email, subject, html_body)
+
+        # Send Slack notifications
+        if "slack" in channels and user_id:
+            send_slack_notifications(user_id, matches)
+
+
+def send_slack_notifications(user_id: str, articles: List[Dict[str, Any]]):
+    """
+    Send Slack notifications for matching articles.
+    Looks up user's Slack connection and sends messages.
+    """
+    supabase = get_supabase()
+    
+    try:
+        # Get user's Slack connection
+        result = supabase.table("slack_connections") \
+            .select("access_token, channel_id, channel_name") \
+            .eq("user_id", user_id) \
+            .single() \
+            .execute()
+        
+        if not result.data:
+            logger.debug(f"No Slack connection for user {user_id}")
+            return
+        
+        slack_data = result.data
+        access_token = slack_data.get("access_token")
+        channel_id = slack_data.get("channel_id")
+        
+        if not access_token or not channel_id:
+            logger.debug(f"Slack not fully configured for user {user_id}")
+            return
+        
+        # Send each article as a separate message
+        for article in articles:
+            blocks = format_notification_blocks(article)
+            fallback_text = f"🚨 {article.get('headline', 'New Alert')}"
+            
+            success = send_slack_message(
+                access_token=access_token,
+                channel_id=channel_id,
+                blocks=blocks,
+                text=fallback_text,
+            )
+            
+            if success:
+                logger.info(f"Slack notification sent for article: {article.get('headline', 'Unknown')[:50]}")
+            else:
+                logger.warning(f"Failed to send Slack notification for article: {article.get('headline', 'Unknown')[:50]}")
+                
+    except Exception as e:
+        logger.error(f"Error sending Slack notifications: {e}")
 
 
 def send_weekly_summaries():
@@ -220,8 +274,10 @@ def send_weekly_summaries():
         top_matches = matches[:10]
 
         user_email = sub.get("users", {}).get("email")
+        user_id = sub.get("user_id")
         channels = sub.get("channels", [])
 
+        # Send Email digest
         if "email" in channels and user_email:
             subject = f"📅 Weekly Security Digest: {len(matches)} Articles"
             html_body = f"""
@@ -233,5 +289,90 @@ def send_weekly_summaries():
             <p style="font-size: 12px; color: #666;">Manage your subscriptions in your dashboard.</p>
             """
             send_email(user_email, subject, html_body)
+        
+        # Send Slack digest
+        if "slack" in channels and user_id:
+            send_slack_weekly_digest(user_id, sub.get('name', 'Weekly Digest'), top_matches, len(matches))
 
     logger.info("Weekly summaries sent.")
+
+
+def send_slack_weekly_digest(user_id: str, sub_name: str, articles: List[Dict[str, Any]], total_count: int):
+    """
+    Send weekly Slack digest with top articles.
+    """
+    supabase = get_supabase()
+    
+    try:
+        result = supabase.table("slack_connections") \
+            .select("access_token, channel_id") \
+            .eq("user_id", user_id) \
+            .single() \
+            .execute()
+        
+        if not result.data:
+            return
+        
+        access_token = result.data.get("access_token")
+        channel_id = result.data.get("channel_id")
+        
+        if not access_token or not channel_id:
+            return
+        
+        # Build digest blocks
+        blocks = [
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": f"📅 Weekly Digest: {sub_name}",
+                    "emoji": True,
+                }
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"Here are the top *{len(articles)}* stories from *{total_count}* matching articles this week."
+                }
+            },
+            {"type": "divider"},
+        ]
+        
+        # Add each article
+        for i, article in enumerate(articles[:5], 1):
+            priority = article.get("priority", "INFO").upper()
+            priority_emoji = {"CRITICAL": "🔴", "HIGH": "🟠", "MEDIUM": "🟡", "LOW": "🟢"}.get(priority, "🔵")
+            headline = article.get("headline", "No headline")
+            article_url = article.get("article_url", "")
+            
+            article_text = f"*{i}. {priority_emoji} {headline}*"
+            if article_url:
+                article_text = f"*{i}. {priority_emoji} <{article_url}|{headline}>*"
+            
+            blocks.append({
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": article_text}
+            })
+        
+        if total_count > 5:
+            blocks.append({
+                "type": "context",
+                "elements": [{"type": "mrkdwn", "text": f"_And {total_count - 5} more articles..._"}]
+            })
+        
+        blocks.append({"type": "divider"})
+        blocks.append({
+            "type": "context",
+            "elements": [{"type": "mrkdwn", "text": "📰 _CyberShepherd Weekly Digest_"}]
+        })
+        
+        send_slack_message(
+            access_token=access_token,
+            channel_id=channel_id,
+            blocks=blocks,
+            text=f"📅 Weekly Digest: {len(articles)} articles matching '{sub_name}'",
+        )
+        
+    except Exception as e:
+        logger.error(f"Error sending Slack weekly digest: {e}")
