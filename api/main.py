@@ -13,7 +13,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
 from .config import API_TITLE, API_VERSION, API_DESCRIPTION, SCRAPE_INTERVAL_HOURS
-from .routers import articles_router, analysis_router, scheduler_router
+from .routers import articles_router, analysis_router, scheduler_router, company_router
 from .routers.scheduler import set_scheduler
 from .services.scraper import scrape_and_save
 
@@ -77,6 +77,7 @@ app.add_middleware(
 app.include_router(articles_router)
 app.include_router(analysis_router)
 app.include_router(scheduler_router)
+app.include_router(company_router)
 
 
 @app.get("/")

@@ -75,6 +75,40 @@ uvicorn api.main:app --reload --port 8000
 | `POST` | `/scheduler/stop` | Stop scheduler |
 | `POST` | `/scheduler/trigger` | Trigger immediate scrape |
 
+### Company Profile (Text-to-Filter)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/company/profile` | Analyze company & generate filter suggestions |
+| `POST` | `/company/suggest-filters` | Lightweight filter suggestions only |
+| `GET` | `/company/filter-options` | Get all available filter options |
+
+**Example Request:**
+```json
+POST /company/profile
+{
+  "company_url": "https://acme-security.com",
+  "description": "We are a fintech company using AWS and Kubernetes. Our clients are banks. We're concerned about data breaches."
+}
+```
+
+**Example Response:**
+```json
+{
+  "profile": {
+    "name": "Acme Security",
+    "industry": "fintech",
+    "tech_stack": ["aws", "kubernetes"]
+  },
+  "suggested_filters": {
+    "categories": ["security", "data_breach", "cloud"],
+    "regions": ["usa", "global"],
+    "threat_concerns": ["data_breach", "api_security"],
+    "technologies": ["aws", "kubernetes"]
+  }
+}
+```
+
 ### Health
 
 | Method | Endpoint | Description |
@@ -92,6 +126,9 @@ uvicorn api.main:app --reload --port 8000
 | `OPENAI_MODEL` | ❌ | `gpt-4o-mini` | Model for analysis |
 | `SCRAPE_INTERVAL_HOURS` | ❌ | `1` | Hours between scrapes |
 | `MAX_CONCURRENT` | ❌ | `5` | Concurrent LLM calls |
+| `FIRECRAWL_API_KEY` | ❌* | - | Firecrawl API key (for `/company` endpoints) |
+
+*Required only for company profile endpoints.
 
 ## Project Structure
 
