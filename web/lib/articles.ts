@@ -136,6 +136,10 @@ export async function fetchArticles(
 ): Promise<PaginatedResult<Article>> {
   const page = pagination?.page ?? 1;
   const pageSize = pagination?.pageSize ?? 24;
+  const hasRegionFilter = filters?.regions && filters.regions.length > 0;
+  
+  // If filtering by region, fetch more to compensate for client-side filtering
+  const fetchSize = hasRegionFilter ? pageSize * 5 : pageSize;
   const offset = (page - 1) * pageSize;
 
   let query = supabase
@@ -165,11 +169,13 @@ export async function fetchArticles(
     query = query.in("priority", filters.priorities.map(p => p.toLowerCase()));
   }
 
-  if (filters?.regions && filters.regions.length > 0) {
-    // regions is JSONB array, need to use contains for each
-    // Using raw filter for JSONB array matching
-    const regionFilters = filters.regions.map(r => `regions.cs.[{"region":"${r}"}]`).join(',');
-    // Alternative: filter on client side for now
+  // Region filtering - use raw filter for JSONB containment
+  if (hasRegionFilter) {
+    // Build OR condition for each region: regions @> '[{"region":"russia"}]'
+    const regionConditions = filters.regions!.map(
+      r => `regions.cs.[{"region":"${r}"}]`
+    ).join(",");
+    query = query.or(regionConditions);
   }
 
   if (filters?.fromDate) {
@@ -183,7 +189,7 @@ export async function fetchArticles(
   // Apply pagination and ordering
   query = query
     .order("analyzed_at", { ascending: false })
-    .range(offset, offset + pageSize - 1);
+    .range(offset, offset + fetchSize - 1);
 
   const { data, error, count } = await query;
 
@@ -192,19 +198,17 @@ export async function fetchArticles(
     return { data: [], total: 0, page, pageSize, hasMore: false };
   }
 
-  const articles = (data as DBArticleAnalysis[]).map(mapDBToArticle);
+  let articles = (data as DBArticleAnalysis[]).map(mapDBToArticle);
   
-  // Client-side filter for regions (JSONB array is tricky with Supabase)
-  const filteredArticles = filters?.regions && filters.regions.length > 0
-    ? articles.filter(a => 
-        a.regions.some(r => filters.regions!.includes(r.region))
-      )
-    : articles;
+  // Slice to pageSize if we fetched extra
+  if (hasRegionFilter && articles.length > pageSize) {
+    articles = articles.slice(0, pageSize);
+  }
 
   const total = count ?? 0;
 
   return {
-    data: filteredArticles,
+    data: articles,
     total,
     page,
     pageSize,

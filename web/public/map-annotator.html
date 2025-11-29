@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SheepAI Map Annotator</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container { max-width: 1600px; margin: 0 auto; }
+    
+    h1 { font-size: 24px; margin-bottom: 20px; color: #10b981; }
+    
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 20px;
+    }
+    
+    .map-container {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+    }
+    
+    #map-wrapper {
+      position: relative;
+      display: inline-block;
+      cursor: crosshair;
+      width: 100%;
+    }
+    
+    #map-image {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 8px;
+    }
+    
+    .annotation-dot {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      background: #10b981;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      z-index: 10;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    
+    .annotation-dot:hover, .annotation-dot.selected {
+      transform: translate(-50%, -50%) scale(1.4);
+      background: #f59e0b;
+    }
+    
+    .annotation-dot.unpositioned {
+      background: #ef4444;
+      opacity: 0.5;
+    }
+    
+    .annotation-label {
+      position: absolute;
+      background: rgba(0,0,0,0.85);
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      white-space: nowrap;
+      pointer-events: none;
+      transform: translate(-50%, -140%);
+      z-index: 20;
+    }
+    
+    .sidebar {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 20px;
+      height: calc(100vh - 100px);
+      overflow-y: auto;
+      position: sticky;
+      top: 20px;
+    }
+    
+    .sidebar h2 { font-size: 16px; margin-bottom: 15px; color: #94a3b8; }
+    
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 4px; }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 8px 12px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      color: #e2e8f0;
+      font-size: 13px;
+    }
+    
+    .btn {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: #10b981; color: #fff; }
+    .btn-primary:hover { background: #059669; }
+    .btn-secondary { background: #475569; color: #fff; }
+    .btn-secondary:hover { background: #64748b; }
+    .btn-sm { padding: 4px 8px; font-size: 11px; }
+    
+    .btn-group { display: flex; gap: 8px; margin: 15px 0; }
+    
+    .region-list { margin-top: 15px; }
+    
+    .region-item {
+      display: flex;
+      align-items: center;
+      padding: 8px 10px;
+      background: #0f172a;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .region-item:hover { background: #1e3a5f; }
+    .region-item.selected { background: #1e3a5f; border: 1px solid #10b981; }
+    .region-item.positioned { border-left: 3px solid #10b981; }
+    .region-item.unpositioned { border-left: 3px solid #ef4444; opacity: 0.7; }
+    
+    .region-item .flag { font-size: 16px; margin-right: 8px; }
+    .region-item .name { flex: 1; }
+    .region-item .count { color: #64748b; font-size: 10px; margin-left: 8px; }
+    .region-item .coords { color: #10b981; font-size: 10px; font-family: monospace; }
+    
+    .output-section {
+      margin-top: 20px;
+      background: #0f172a;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .output-section h3 { font-size: 12px; color: #94a3b8; margin-bottom: 8px; }
+    
+    #output-code {
+      width: 100%;
+      height: 300px;
+      background: #020617;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      color: #10b981;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 10px;
+      padding: 10px;
+      resize: vertical;
+    }
+    
+    .coords-display {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(0,0,0,0.9);
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 14px;
+      z-index: 100;
+    }
+    .coords-display span { color: #10b981; }
+    
+    .stats { 
+      display: flex; 
+      gap: 15px; 
+      margin-bottom: 15px;
+      padding: 10px;
+      background: #0f172a;
+      border-radius: 8px;
+    }
+    .stat { text-align: center; }
+    .stat-value { font-size: 20px; font-weight: bold; color: #10b981; }
+    .stat-label { font-size: 10px; color: #64748b; }
+    
+    .filter-tabs {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+    .filter-tab {
+      padding: 5px 10px;
+      background: #0f172a;
+      border: none;
+      border-radius: 4px;
+      color: #64748b;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .filter-tab.active { background: #10b981; color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🗺️ SheepAI Region Map Annotator</h1>
+    
+    <div class="main-content">
+      <div class="map-container">
+        <div id="map-wrapper">
+          <img id="map-image" src="/world.png" alt="World Map">
+          <div id="annotations-overlay"></div>
+        </div>
+      </div>
+      
+      <div class="sidebar">
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-value" id="total-regions">0</div>
+            <div class="stat-label">Total</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="positioned-regions">0</div>
+            <div class="stat-label">Positioned</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="unpositioned-regions">0</div>
+            <div class="stat-label">Need Position</div>
+          </div>
+        </div>
+        
+        <h2>Selected Region</h2>
+        <div class="form-group">
+          <label>Region Key</label>
+          <input type="text" id="region-key" readonly>
+        </div>
+        <div class="form-group">
+          <label>Display Name</label>
+          <input type="text" id="region-name">
+        </div>
+        <div class="form-group">
+          <label>Flag</label>
+          <input type="text" id="region-flag">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="form-group">
+            <label>X (0-100)</label>
+            <input type="number" id="region-x" step="0.1" min="0" max="100">
+          </div>
+          <div class="form-group">
+            <label>Y (0-100)</label>
+            <input type="number" id="region-y" step="0.1" min="0" max="100">
+          </div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="updateSelected()">Update Position</button>
+          <button class="btn btn-secondary" onclick="clearSelection()">Clear</button>
+        </div>
+        
+        <div class="filter-tabs">
+          <button class="filter-tab active" onclick="setFilter('all')">All</button>
+          <button class="filter-tab" onclick="setFilter('positioned')">Positioned</button>
+          <button class="filter-tab" onclick="setFilter('unpositioned')">Need Position</button>
+        </div>
+        
+        <div class="region-list" id="region-list"></div>
+        
+        <div class="output-section">
+          <h3>TypeScript Output (copy to region-map.tsx)</h3>
+          <textarea id="output-code" readonly></textarea>
+          <button class="btn btn-secondary" style="margin-top: 8px; width: 100%;" onclick="copyCode()">
+            📋 Copy Code
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="coords-display">
+    Click position: <span id="cursor-x">-</span>, <span id="cursor-y">-</span>
+  </div>
+
+  <script>
+    // Pre-populated regions from Supabase (unique regions with article counts)
+    const REGIONS_FROM_DB = [
+      { key: "global", name: "Global", flag: "🌍", count: 312, x: null, y: null },
+      { key: "usa", name: "USA", flag: "🇺🇸", count: 102, x: 21, y: 40 },
+      { key: "russia", name: "Russia", flag: "🇷🇺", count: 30, x: 72, y: 28 },
+      { key: "china", name: "China", flag: "🇨🇳", count: 27, x: 79, y: 42 },
+      { key: "south_korea", name: "South Korea", flag: "🇰🇷", count: 25, x: 86, y: 42 },
+      { key: "europe", name: "Europe", flag: "🇪🇺", count: 22, x: 52, y: 35 },
+      { key: "ukraine", name: "Ukraine", flag: "🇺🇦", count: 20, x: 58, y: 33 },
+      { key: "canada", name: "Canada", flag: "🇨🇦", count: 19, x: 22, y: 28 },
+      { key: "uk", name: "UK", flag: "🇬🇧", count: 19, x: 47, y: 32 },
+      { key: "brazil", name: "Brazil", flag: "🇧🇷", count: 15, x: 32, y: 65 },
+      { key: "north_korea", name: "North Korea", flag: "🇰🇵", count: 14, x: 85, y: 38 },
+      { key: "germany", name: "Germany", flag: "🇩🇪", count: 13, x: 51, y: 33 },
+      { key: "taiwan", name: "Taiwan", flag: "🇹🇼", count: 13, x: 84, y: 48 },
+      { key: "asia", name: "Asia", flag: "🌏", count: 12, x: 75, y: 45 },
+      { key: "australia", name: "Australia", flag: "🇦🇺", count: 11, x: 87, y: 72 },
+      { key: "india", name: "India", flag: "🇮🇳", count: 10, x: 72, y: 50 },
+      { key: "italy", name: "Italy", flag: "🇮🇹", count: 9, x: 52, y: 40 },
+      { key: "japan", name: "Japan", flag: "🇯🇵", count: 9, x: 90, y: 40 },
+      { key: "middle_east", name: "Middle East", flag: "🌍", count: 13, x: 60, y: 45 },
+      { key: "africa", name: "Africa", flag: "🌍", count: 9, x: 52, y: 58 },
+      { key: "france", name: "France", flag: "🇫🇷", count: 7, x: 49, y: 36 },
+      { key: "israel", name: "Israel", flag: "🇮🇱", count: 6, x: 58, y: 44 },
+      { key: "netherlands", name: "Netherlands", flag: "🇳🇱", count: 6, x: 50, y: 31 },
+      { key: "north_america", name: "North America", flag: "🌎", count: 6, x: 20, y: 35 },
+      { key: "iran", name: "Iran", flag: "🇮🇷", count: 5, x: 63, y: 44 },
+      { key: "poland", name: "Poland", flag: "🇵🇱", count: 5, x: 54, y: 32 },
+      { key: "mexico", name: "Mexico", flag: "🇲🇽", count: 4, x: 17, y: 48 },
+      { key: "south_america", name: "South America", flag: "🌎", count: 4, x: 30, y: 70 },
+      { key: "spain", name: "Spain", flag: "🇪🇸", count: 4, x: 46, y: 40 },
+      { key: "vietnam", name: "Vietnam", flag: "🇻🇳", count: 4, x: 80, y: 52 },
+      { key: "saudi_arabia", name: "Saudi Arabia", flag: "🇸🇦", count: 3, x: 61, y: 48 },
+      { key: "singapore", name: "Singapore", flag: "🇸🇬", count: 3, x: 80, y: 60 },
+      { key: "kazakhstan", name: "Kazakhstan", flag: "🇰🇿", count: 2, x: 67, y: 35 },
+      { key: "kyrgyzstan", name: "Kyrgyzstan", flag: "🇰🇬", count: 2, x: 70, y: 38 },
+      { key: "uae", name: "UAE", flag: "🇦🇪", count: 2, x: 63, y: 48 },
+      { key: "indonesia", name: "Indonesia", flag: "🇮🇩", count: 1, x: 82, y: 62 },
+      { key: "new_zealand", name: "New Zealand", flag: "🇳🇿", count: 1, x: 95, y: 78 },
+      { key: "uzbekistan", name: "Uzbekistan", flag: "🇺🇿", count: 1, x: 67, y: 38 },
+    ];
+    
+    let regions = [...REGIONS_FROM_DB];
+    let selectedIndex = null;
+    let currentFilter = 'all';
+    
+    const mapImage = document.getElementById('map-image');
+    const mapWrapper = document.getElementById('map-wrapper');
+    
+    // Click on map to set position
+    mapWrapper.addEventListener('click', function(e) {
+      if (selectedIndex === null) return;
+      
+      const rect = mapImage.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+      const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+      
+      document.getElementById('region-x').value = x;
+      document.getElementById('region-y').value = y;
+      
+      // Auto-update
+      regions[selectedIndex].x = parseFloat(x);
+      regions[selectedIndex].y = parseFloat(y);
+      renderAll();
+    });
+    
+    // Track cursor
+    mapWrapper.addEventListener('mousemove', function(e) {
+      const rect = mapImage.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+      const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+      document.getElementById('cursor-x').textContent = x;
+      document.getElementById('cursor-y').textContent = y;
+    });
+    
+    function selectRegion(index) {
+      selectedIndex = index;
+      const r = regions[index];
+      document.getElementById('region-key').value = r.key;
+      document.getElementById('region-name').value = r.name;
+      document.getElementById('region-flag').value = r.flag;
+      document.getElementById('region-x').value = r.x || '';
+      document.getElementById('region-y').value = r.y || '';
+      renderAll();
+    }
+    
+    function clearSelection() {
+      selectedIndex = null;
+      document.getElementById('region-key').value = '';
+      document.getElementById('region-name').value = '';
+      document.getElementById('region-flag').value = '';
+      document.getElementById('region-x').value = '';
+      document.getElementById('region-y').value = '';
+      renderAll();
+    }
+    
+    function updateSelected() {
+      if (selectedIndex === null) return;
+      
+      regions[selectedIndex].name = document.getElementById('region-name').value;
+      regions[selectedIndex].flag = document.getElementById('region-flag').value;
+      regions[selectedIndex].x = parseFloat(document.getElementById('region-x').value) || null;
+      regions[selectedIndex].y = parseFloat(document.getElementById('region-y').value) || null;
+      
+      renderAll();
+    }
+    
+    function setFilter(f) {
+      currentFilter = f;
+      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+      renderList();
+    }
+    
+    function renderAll() {
+      renderDots();
+      renderList();
+      updateStats();
+      generateCode();
+    }
+    
+    function renderDots() {
+      const overlay = document.getElementById('annotations-overlay');
+      overlay.innerHTML = '';
+      
+      regions.forEach((r, i) => {
+        if (r.x === null || r.y === null) return;
+        
+        const dot = document.createElement('div');
+        dot.className = 'annotation-dot' + (selectedIndex === i ? ' selected' : '');
+        dot.style.left = r.x + '%';
+        dot.style.top = r.y + '%';
+        dot.onclick = (e) => { e.stopPropagation(); selectRegion(i); };
+        
+        const label = document.createElement('div');
+        label.className = 'annotation-label';
+        label.style.left = r.x + '%';
+        label.style.top = r.y + '%';
+        label.textContent = r.flag + ' ' + r.name;
+        
+        overlay.appendChild(dot);
+        overlay.appendChild(label);
+      });
+    }
+    
+    function renderList() {
+      const list = document.getElementById('region-list');
+      
+      let filtered = regions;
+      if (currentFilter === 'positioned') {
+        filtered = regions.filter(r => r.x !== null && r.y !== null);
+      } else if (currentFilter === 'unpositioned') {
+        filtered = regions.filter(r => r.x === null || r.y === null);
+      }
+      
+      list.innerHTML = filtered.map((r, i) => {
+        const realIndex = regions.indexOf(r);
+        const isPositioned = r.x !== null && r.y !== null;
+        return `
+          <div class="region-item ${selectedIndex === realIndex ? 'selected' : ''} ${isPositioned ? 'positioned' : 'unpositioned'}" 
+               onclick="selectRegion(${realIndex})">
+            <span class="flag">${r.flag}</span>
+            <span class="name">${r.name}</span>
+            <span class="count">(${r.count})</span>
+            ${isPositioned ? `<span class="coords">${r.x}, ${r.y}</span>` : '<span style="color:#ef4444;font-size:10px;">Click map</span>'}
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function updateStats() {
+      const positioned = regions.filter(r => r.x !== null && r.y !== null).length;
+      document.getElementById('total-regions').textContent = regions.length;
+      document.getElementById('positioned-regions').textContent = positioned;
+      document.getElementById('unpositioned-regions').textContent = regions.length - positioned;
+    }
+    
+    function generateCode() {
+      const positioned = regions.filter(r => r.x !== null && r.y !== null);
+      
+      const code = `// Auto-generated from map-annotator.html
+// Total: ${positioned.length} regions positioned
+
+const REGION_POSITIONS: Record<string, { x: number; y: number; name: string }> = {
+${positioned.map(r => `  ${r.key}: { x: ${r.x}, y: ${r.y}, name: "${r.name}" },`).join('\n')}
+};
+
+// Region flags for reference
+const REGION_FLAGS: Record<string, string> = {
+${positioned.map(r => `  ${r.key}: "${r.flag}",`).join('\n')}
+};`;
+      
+      document.getElementById('output-code').value = code;
+    }
+    
+    function copyCode() {
+      const code = document.getElementById('output-code');
+      code.select();
+      document.execCommand('copy');
+      alert('Code copied! Paste into region-map.tsx');
+    }
+    
+    // Initialize
+    mapImage.onload = function() {
+      renderAll();
+    };
+    
+    // If image already loaded
+    if (mapImage.complete) {
+      renderAll();
+    }
+  </script>
+</body>
+</html>

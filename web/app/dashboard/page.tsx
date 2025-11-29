@@ -5,19 +5,16 @@ import { DashboardShell } from "@/components/layout/shell";
 import { ShepherdNav } from "@/components/layout/shepherd-nav";
 import { ThreatCard } from "@/components/feed/threat-card";
 import { ShepherdChat } from "@/components/chat/shepherd-chat";
-import { TechStackFilters } from "@/components/dashboard/tech-stack-filters";
 import { FeedToolbar } from "@/components/dashboard/feed-toolbar";
 import { FilterGroups } from "@/components/dashboard/filter-groups";
 import { CategoryFilter } from "@/components/dashboard/category-filter";
-import { RegionFilter } from "@/components/dashboard/region-filter";
+import { RegionMap } from "@/components/dashboard/region-map";
 import { TechnologyFilter } from "@/components/dashboard/technology-filter";
 import { useUserPreferences } from "@/lib/user-preferences";
 import { 
   fetchArticles, 
-  verifyArticle, 
   semanticSearch,
   ArticleFilters,
-  PaginatedResult 
 } from "@/lib/articles";
 import { Article, Priority } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -191,13 +188,6 @@ export default function DashboardPage() {
     }
   }, []);
 
-  const onVerify = async (id: string) => {
-    const updated = await verifyArticle(id);
-    if (updated) {
-      setArticles(prev => prev.map(a => a.id === id ? updated : a));
-    }
-  };
-
   const loadMoreArticles = () => {
     if (!loadingMore && hasMore && !isSemanticSearch) {
       loadArticles(page + 1, true);
@@ -259,9 +249,9 @@ export default function DashboardPage() {
         </Button>
       </div>
       
+      <RegionMap />
       <FilterGroups />
       <CategoryFilter />
-      <RegionFilter />
       <TechnologyFilter />
     </div>
   );
@@ -305,7 +295,7 @@ export default function DashboardPage() {
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                       {filteredArticles.map(article => (
-                          <ThreatCard key={article.id} article={article} onVerify={onVerify} />
+                          <ThreatCard key={article.id} article={article} />
                       ))}
                     </div>
                     

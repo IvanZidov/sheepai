@@ -1,20 +1,15 @@
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Article, Priority } from "@/lib/types";
-import { TrustBadge } from "./trust-badge";
-import { MessageSquare, Share2, Sparkles, ChevronRight, Megaphone, ShieldAlert, ExternalLink } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 import Link from "next/link";
 
 interface ThreatCardProps {
   article: Article;
-  onVerify: (id: string) => Promise<void>;
 }
 
-export function ThreatCard({ article, onVerify }: ThreatCardProps) {
-  const [isVerifying, setIsVerifying] = useState(false);
+export function ThreatCard({ article }: ThreatCardProps) {
 
   const priorityConfig: Record<Priority, { border: string, bg: string, text: string, icon: React.ReactNode }> = {
     CRITICAL: { 
@@ -50,14 +45,6 @@ export function ThreatCard({ article, onVerify }: ThreatCardProps) {
   };
 
   const config = priorityConfig[article.priority] || priorityConfig.INFO;
-
-  const handleVerify = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsVerifying(true);
-    await onVerify(article.id);
-    setIsVerifying(false);
-  };
 
   return (
     <Link href={`/article/${article.id}`} className="h-full">
@@ -138,32 +125,17 @@ export function ThreatCard({ article, onVerify }: ThreatCardProps) {
           )}
         </CardContent>
 
-        <CardFooter className="pl-5 pr-4 pt-0 pb-3 flex items-center justify-between mt-auto border-t border-border/50 pt-2">
-           <div className="flex gap-1 overflow-hidden w-full mr-2">
-              {article.categories.slice(0, 2).map(cat => (
+        <CardFooter className="pl-5 pr-4 pt-0 pb-3 mt-auto border-t border-border/50 pt-2">
+           <div className="flex gap-1 overflow-hidden w-full">
+              {article.categories.slice(0, 3).map((cat, idx) => (
                   <Badge 
-                      key={cat} 
+                      key={`${cat}-${idx}`} 
                       variant="secondary" 
                       className="text-[9px] px-1.5 h-4 font-mono text-muted-foreground bg-muted/50 hover:bg-muted whitespace-nowrap"
                   >
                       {cat.replace(/_/g, ' ')}
                   </Badge>
               ))}
-           </div>
-
-           <div className="flex gap-0.5 shrink-0">
-             <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-7 gap-1 text-[10px] text-muted-foreground hover:text-primary group/verify px-2"
-                  onClick={handleVerify}
-                  disabled={isVerifying}
-                >
-                    <Sparkles className={cn("w-3 h-3 transition-all group-hover/verify:text-amber-400", isVerifying && "animate-spin")} />
-                    <span className={cn(isVerifying && "animate-pulse")}>
-                      {isVerifying ? "Check" : "Check"}
-                    </span>
-             </Button>
            </div>
         </CardFooter>
       </Card>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +14,7 @@ import {
   Loader2, Building2, Sparkles, Check, AlertCircle, 
   Globe, Tag, Cpu, Shield, Users, X, Link2, Briefcase,
   Target, Zap, ChevronRight, Settings2, User,
-  Lock, Hash, Building, Package
+  Lock, Hash, Building, Package, ArrowRight
 } from 'lucide-react';
 import { ShepherdNav } from "@/components/layout/shepherd-nav";
 import { useAuth } from "@/contexts/auth-context";
@@ -25,6 +26,7 @@ import { cn } from "@/lib/utils";
 type SettingsTab = 'personalization' | 'account' | 'security';
 
 export default function SettingsPage() {
+  const router = useRouter();
   const { user, isLoading } = useAuth();
   const { 
     companyFilters, 
@@ -38,6 +40,16 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('personalization');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [filtersApplied, setFiltersApplied] = useState(false);
+
+  const handleApplyFilters = () => {
+    applyCompanyFilters();
+    setFiltersApplied(true);
+    // Redirect to dashboard after a short delay
+    setTimeout(() => {
+      router.push('/dashboard');
+    }, 1500);
+  };
   
   // Password change state
   const [newPassword, setNewPassword] = useState('');
@@ -92,6 +104,7 @@ export default function SettingsPage() {
     setAnalyzing(true);
     setAnalysisError(null);
     setAnalysisResult(null);
+    setFiltersApplied(false);
 
     try {
       const result = await analyzeCompanyProfile({
@@ -224,7 +237,10 @@ export default function SettingsPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={clearCompanyFilters}
+                            onClick={() => {
+                              clearCompanyFilters();
+                              setFiltersApplied(false);
+                            }}
                             className="h-8 w-8 text-muted-foreground hover:text-destructive"
                           >
                             <X className="w-4 h-4" />
@@ -251,13 +267,21 @@ export default function SettingsPage() {
                           <div className="text-xs text-muted-foreground">Keywords</div>
                         </div>
                       </div>
-                      <Button 
-                        onClick={applyCompanyFilters}
-                        className="w-full mt-4 bg-emerald-600 hover:bg-emerald-500"
-                      >
-                        <Zap className="w-4 h-4 mr-2" />
-                        Apply Filters to Feed
-                      </Button>
+                      {filtersApplied ? (
+                        <div className="w-full mt-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400">
+                          <Check className="w-4 h-4" />
+                          <span className="font-medium">Filters applied! Redirecting to feed...</span>
+                        </div>
+                      ) : (
+                        <Button 
+                          onClick={handleApplyFilters}
+                          className="w-full mt-4 bg-emerald-600 hover:bg-emerald-500"
+                        >
+                          <Zap className="w-4 h-4 mr-2" />
+                          Apply Filters to Feed
+                          <ArrowRight className="w-4 h-4 ml-2" />
+                        </Button>
+                      )}
                     </CardContent>
                   </Card>
                 )}
