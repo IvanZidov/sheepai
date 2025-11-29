@@ -9,7 +9,7 @@ import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
 from typing import List, Dict, Any
 
-from ..config import BREVO_API_KEY, EMAIL_FROM_ADDRESS
+from ..config import BREVO_API_KEY, EMAIL_FROM_ADDRESS, FRONTEND_URL
 from ..database import get_supabase
 from ..models.article import ArticleAnalysis
 from .slack import send_slack_message, format_notification_blocks
@@ -104,19 +104,118 @@ def send_email(to_email: str, subject: str, html_content: str):
         logger.error(f"Unexpected error sending email: {e}")
 
 
-def format_article_html(article: dict) -> str:
-    """Format a single article for email"""
+def get_priority_color(priority: str) -> str:
+    """Get color code for priority level."""
+    return {
+        "CRITICAL": "#ef4444",
+        "HIGH": "#f59e0b",
+        "MEDIUM": "#eab308",
+        "LOW": "#22c55e",
+        "INFO": "#3b82f6"
+    }.get(priority.upper(), "#3b82f6")
+
+
+def format_email_wrapper(title: str, content: str, subtitle: str = "") -> str:
+    """Wrap content in branded email template."""
     return f"""
-    <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #eaeaea; border-radius: 8px;">
-        <h3 style="margin-top: 0;">{article.get('headline', 'No Headline')}</h3>
-        <p><strong>Priority:</strong> {article.get('priority', 'INFO').upper()} | 
-           <strong>Relevance:</strong> {article.get('relevance_score', 0)}/10</p>
-        <p>{article.get('short_summary', '')}</p>
-        <p><strong>Key Takeaways:</strong></p>
-        <ul>
-            {''.join([f'<li>{t.get("point")}</li>' for t in article.get('key_takeaways', [])])}
-        </ul>
-        <a href="{article.get('article_url', '#')}" style="display: inline-block; padding: 8px 12px; background-color: #10b981; color: white; text-decoration: none; border-radius: 4px;">Read Full Article</a>
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
+        <div style="text-align: center; margin-bottom: 32px;">
+            <h1 style="color: #10b981; font-size: 24px; margin: 0; letter-spacing: -0.5px;">🐑 CyberShepherd</h1>
+            <p style="color: #6b7280; margin: 4px 0 0 0; font-size: 14px;">Security Intelligence Report</p>
+        </div>
+        
+        <div style="margin-bottom: 24px; text-align: center;">
+            <h2 style="color: #111827; font-size: 20px; margin: 0 0 8px 0;">{title}</h2>
+            {f'<p style="color: #4b5563; margin: 0; font-size: 15px;">{subtitle}</p>' if subtitle else ''}
+        </div>
+
+        {content}
+        
+        <div style="text-align: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+                Manage your subscriptions in your dashboard.
+            </p>
+            <p style="color: #9ca3af; font-size: 12px; margin: 8px 0 0 0;">
+                © {datetime.now().year} CyberShepherd. All rights reserved.
+            </p>
+        </div>
+    </div>
+    """
+
+
+def format_article_html(article: dict) -> str:
+    """Format a single article for email using card style."""
+    priority = article.get("priority", "INFO").upper()
+    priority_color = get_priority_color(priority)
+    
+    # Format key takeaways
+    takeaways = article.get("key_takeaways", [])
+    takeaways_html = ""
+    if takeaways:
+        takeaways_html = "<ul style='margin: 0; padding-left: 20px; color: #374151;'>"
+        for t in takeaways[:3]:
+            point = t.get("point", "") if isinstance(t, dict) else str(t)
+            takeaways_html += f"<li style='margin-bottom: 6px; font-size: 14px;'>{point}</li>"
+        takeaways_html += "</ul>"
+    
+    # Format technologies
+    technologies = article.get("mentioned_technologies", [])[:5]
+    tech_html = ""
+    if technologies:
+        tech_items = [
+            f'<span style="display: inline-block; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-right: 4px; margin-bottom: 4px; font-weight: 500;">{t}</span>'
+            for t in technologies
+        ]
+        tech_html = f"""
+        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #f3f4f6;">
+            <div style="margin-bottom: 8px; font-size: 11px; text-transform: uppercase; color: #6b7280; letter-spacing: 0.05em; font-weight: 600;">Technologies</div>
+            <div>{''.join(tech_items)}</div>
+        </div>
+        """
+
+    internal_url = f"{FRONTEND_URL}/article/{article.get('id')}"
+
+    return f"""
+    <div style="margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+        <div style="padding: 20px; border-bottom: 1px solid #f3f4f6; background-color: #ffffff;">
+            <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                <span style="background-color: {priority_color}15; color: {priority_color}; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em;">
+                    {priority}
+                </span>
+                <span style="margin-left: auto; color: #6b7280; font-size: 12px; font-weight: 500;">
+                    Relevance: {article.get('relevance_score', 0)}/10
+                </span>
+            </div>
+            
+            <h3 style="margin: 0 0 8px 0; color: #111827; font-size: 18px; line-height: 1.4;">
+                <a href="{internal_url}" style="color: #111827; text-decoration: none;">
+                    {article.get('headline', 'No Headline')}
+                </a>
+            </h3>
+            
+            <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.6;">
+                {article.get('short_summary', '')}
+            </p>
+        </div>
+        
+        <div style="padding: 20px; background-color: #f9fafb;">
+            <div style="margin-bottom: 8px; font-size: 11px; text-transform: uppercase; color: #6b7280; letter-spacing: 0.05em; font-weight: 600;">
+                Key Takeaways
+            </div>
+            {takeaways_html}
+            {tech_html}
+        </div>
+        
+        <div style="padding: 12px 20px; background-color: #f0fdf4; border-top: 1px solid #dcfce7; text-align: center;">
+            <a href="{internal_url}" 
+               style="display: inline-block; background-color: #10b981; color: white; padding: 8px 16px; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 600; margin-right: 12px;">
+               View Analysis
+            </a>
+            <a href="{article.get('article_url', '#')}" 
+               style="display: inline-block; color: #6b7280; text-decoration: none; font-size: 13px; font-weight: 500;">
+               Read Source →
+            </a>
+        </div>
     </div>
     """
 
@@ -162,15 +261,12 @@ def process_notifications(articles: List[Dict[str, Any]]):
 
         # Send Email notifications
         if "email" in channels and user_email:
-            subject = f"🚨 {len(matches)} New Security Alert{'s' if len(matches) > 1 else ''}: {matches[0].get('headline')}"
-            html_body = f"""
-            <h2>New Articles Matching "{sub.get('name')}"</h2>
-            <p>We found {len(matches)} new article(s) matching your criteria.</p>
-            {''.join([format_article_html(a) for a in matches])}
-            <hr>
-            <p style="font-size: 12px; color: #666;">Manage your subscriptions in your dashboard.</p>
-            """
-            send_email(user_email, subject, html_body)
+            title = f"🚨 {len(matches)} New Security Alert{'s' if len(matches) > 1 else ''}"
+            content = "".join([format_article_html(a) for a in matches])
+            subtitle = f"Found {len(matches)} article(s) matching \"{sub.get('name')}\""
+            
+            html_body = format_email_wrapper(title, content, subtitle)
+            send_email(user_email, title, html_body)
 
         # Send Slack notifications
         if "slack" in channels and user_id:
@@ -279,16 +375,22 @@ def send_weekly_summaries():
 
         # Send Email digest
         if "email" in channels and user_email:
-            subject = f"📅 Weekly Security Digest: {len(matches)} Articles"
-            html_body = f"""
-            <h2>Weekly Digest: {sub.get('name')}</h2>
-            <p>Here are the top stories from the past week matching your filters.</p>
-            {''.join([format_article_html(a) for a in top_matches])}
-            <p><em>And {len(matches) - len(top_matches)} more...</em></p>
-            <hr>
-            <p style="font-size: 12px; color: #666;">Manage your subscriptions in your dashboard.</p>
-            """
-            send_email(user_email, subject, html_body)
+            title = f"📅 Weekly Security Digest"
+            subtitle = f"Top stories for \"{sub.get('name')}\""
+            
+            content = "".join([format_article_html(a) for a in top_matches])
+            
+            if len(matches) > len(top_matches):
+                remaining = len(matches) - len(top_matches)
+                content += f"""
+                <div style="text-align: center; padding: 20px; background-color: #f9fafb; border-radius: 8px; color: #6b7280; font-size: 14px;">
+                    And {remaining} more articles... <br>
+                    <a href="#" style="color: #10b981; text-decoration: none;">View all in dashboard</a>
+                </div>
+                """
+                
+            html_body = format_email_wrapper(title, content, subtitle)
+            send_email(user_email, f"{title}: {len(matches)} Articles", html_body)
         
         # Send Slack digest
         if "slack" in channels and user_id:

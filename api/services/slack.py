@@ -10,7 +10,7 @@ import httpx
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
-from ..config import SLACK_CLIENT_ID, SLACK_CLIENT_SECRET, SLACK_REDIRECT_URI
+from ..config import SLACK_CLIENT_ID, SLACK_CLIENT_SECRET, SLACK_REDIRECT_URI, FRONTEND_URL
 from ..models.article import ArticleAnalysis, REGION_FLAGS
 
 logger = logging.getLogger(__name__)
@@ -387,7 +387,7 @@ def send_slack_message(
 def format_notification_blocks(article: Dict[str, Any]) -> List[Dict[str, Any]]:
     """
     Format an article dict (from database) into Slack Block Kit blocks.
-    This is a simplified version for notifications from stored data.
+    Rich formatting similar to format_slack_message but for dict input.
     
     Args:
         article: Article data dict from database
@@ -402,18 +402,16 @@ def format_notification_blocks(article: Dict[str, Any]) -> List[Dict[str, Any]]:
     short_summary = article.get("short_summary", "")
     article_url = article.get("article_url", "")
     relevance_score = article.get("relevance_score", 0)
+    read_time = article.get("read_time_minutes", 5)
     
-    # Build key takeaways text
-    takeaways = article.get("key_takeaways", [])
-    takeaways_text = ""
-    for t in takeaways[:3]:  # Limit to 3 for notifications
-        point = t.get("point", "") if isinstance(t, dict) else str(t)
-        takeaways_text += f"• {point}\n"
+    # Context elements
+    context_elements = [
+        {"type": "mrkdwn", "text": f"*Priority:* {priority}"},
+        {"type": "mrkdwn", "text": f"*Relevance:* {relevance_score}/10"},
+        {"type": "mrkdwn", "text": f"⏱️ {read_time} min"},
+    ]
     
-    # Build technologies text
-    technologies = article.get("mentioned_technologies", [])[:5]
-    tech_text = " ".join([f"`{t}`" for t in technologies]) if technologies else ""
-    
+    # Build blocks
     blocks = [
         {
             "type": "header",
@@ -425,10 +423,7 @@ def format_notification_blocks(article: Dict[str, Any]) -> List[Dict[str, Any]]:
         },
         {
             "type": "context",
-            "elements": [
-                {"type": "mrkdwn", "text": f"*Priority:* {priority}"},
-                {"type": "mrkdwn", "text": f"*Relevance:* {relevance_score}/10"},
-            ]
+            "elements": context_elements
         },
         {"type": "divider"},
         {
@@ -437,32 +432,74 @@ def format_notification_blocks(article: Dict[str, Any]) -> List[Dict[str, Any]]:
         },
     ]
     
-    if takeaways_text:
-        blocks.append({
-            "type": "section",
-            "text": {"type": "mrkdwn", "text": f"*🎯 Key Takeaways*\n{takeaways_text}"}
-        })
-    
-    if tech_text:
+    # Key Takeaways
+    takeaways = article.get("key_takeaways", [])
+    if takeaways:
+        takeaways_text = ""
+        for t in takeaways[:3]:
+            point = t.get("point", "") if isinstance(t, dict) else str(t)
+            takeaways_text += f"• {point}\n"
+        
+        if takeaways_text:
+            blocks.append({
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": f"*🎯 Key Takeaways*\n{takeaways_text}"}
+            })
+            
+    # Technologies
+    technologies = article.get("mentioned_technologies", [])[:5]
+    if technologies:
+        tech_text = " ".join([f"`{t}`" for t in technologies])
         blocks.append({
             "type": "section",
             "text": {"type": "mrkdwn", "text": f"*🔧 Technologies:* {tech_text}"}
         })
-    
+
+    # Action Items (if any)
+    action_items = article.get("action_items", [])
+    if action_items:
+        action_text = ""
+        for a in action_items[:2]: # Limit to 2
+            if isinstance(a, dict):
+                action = a.get("action", "")
+                priority_a = a.get("priority", "when_possible")
+                emoji = {"immediate": "🚨", "soon": "⚡", "when_possible": "📌"}.get(priority_a, "📌")
+                action_text += f"{emoji} {action}\n"
+            else:
+                action_text += f"📌 {str(a)}\n"
+        
+        if action_text:
+            blocks.append({
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": f"*⚡ Action Items*\n{action_text}"}
+            })
+
     blocks.append({"type": "divider"})
+
+    # CTA Buttons
+    actions_elements = []
     
-    # CTA Button
+    # Internal Link
+    internal_url = f"{FRONTEND_URL}/article/{article.get('id')}"
+    actions_elements.append({
+        "type": "button",
+        "text": {"type": "plain_text", "text": "🛡️ View Analysis", "emoji": True},
+        "url": internal_url,
+        "style": "primary"
+    })
+    
+    # External Link
     if article_url:
-        blocks.append({
-            "type": "section",
-            "text": {"type": "mrkdwn", "text": "_From CyberShepherd News_"},
-            "accessory": {
-                "type": "button",
-                "text": {"type": "plain_text", "text": "📖 Read Full Article", "emoji": True},
-                "url": article_url,
-                "style": "primary" if priority in ["CRITICAL", "HIGH"] else None,
-            }
+        actions_elements.append({
+            "type": "button",
+            "text": {"type": "plain_text", "text": "🔗 Read Source", "emoji": True},
+            "url": article_url
         })
+        
+    blocks.append({
+        "type": "actions",
+        "elements": actions_elements
+    })
     
     return blocks
 

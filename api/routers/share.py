@@ -11,6 +11,7 @@ from pydantic import BaseModel, EmailStr
 import jwt
 
 from ..database import get_supabase
+from ..config import FRONTEND_URL
 from ..services.notifier import send_email, format_article_html
 from ..services.slack import send_slack_message, format_notification_blocks
 
@@ -153,10 +154,13 @@ def format_share_email_html(article: dict, personal_message: Optional[str] = Non
             ''' if tech_html else ''}
             
             <div style="padding: 20px; background-color: #f0fdf4; text-align: center;">
+                <a href="{FRONTEND_URL}/article/{article.get('id')}" 
+                   style="display: inline-block; background-color: #10b981; color: white; padding: 8px 16px; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 600; margin-right: 12px;">
+                   View Analysis
+                </a>
                 <a href="{article.get('article_url', '#')}" 
-                   style="display: inline-block; background-color: #10b981; color: white; padding: 12px 24px; 
-                          text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">
-                    📖 Read Full Article
+                   style="display: inline-block; color: #6b7280; text-decoration: none; font-size: 13px; font-weight: 500;">
+                    Read Source →
                 </a>
             </div>
         </div>
@@ -242,17 +246,29 @@ def format_share_slack_blocks(article: dict, personal_message: Optional[str] = N
     blocks.append({"type": "divider"})
     
     # CTA
+    actions_elements = []
+    
+    # Internal Link
+    internal_url = f"{FRONTEND_URL}/article/{article.get('id')}"
+    actions_elements.append({
+        "type": "button",
+        "text": {"type": "plain_text", "text": "🛡️ View Analysis", "emoji": True},
+        "url": internal_url,
+        "style": "primary"
+    })
+    
+    # External Link
     if article_url:
-        blocks.append({
-            "type": "section",
-            "text": {"type": "mrkdwn", "text": "_Shared via CyberShepherd_"},
-            "accessory": {
-                "type": "button",
-                "text": {"type": "plain_text", "text": "📖 Read Full Article", "emoji": True},
-                "url": article_url,
-                "style": "primary" if priority in ["CRITICAL", "HIGH"] else None,
-            }
+        actions_elements.append({
+            "type": "button",
+            "text": {"type": "plain_text", "text": "🔗 Read Source", "emoji": True},
+            "url": article_url
         })
+        
+    blocks.append({
+        "type": "actions",
+        "elements": actions_elements
+    })
     
     return blocks
 
