@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SheepAI - CyberShepherd Presentation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      --primary: #10B981;
+      --primary-dark: #059669;
+      --secondary: #3B82F6;
+      --background: #0a0a0f;
+      --card: #1e293b;
+      --card-lighter: #2a3a50;
+      --foreground: #f8fafc;
+      --muted: #94a3b8;
+      --destructive: #ef4444;
+      --warning: #f59e0b;
+      --network-dark: #0d4a3e;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--background);
+      color: var(--foreground);
+      overflow: hidden;
+    }
+    
+    .slide-container {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .slide {
+      width: 1920px;
+      height: 1080px;
+      background: linear-gradient(135deg, var(--background) 0%, #0f172a 50%, var(--network-dark) 100%);
+      display: none;
+      position: relative;
+      overflow: hidden;
+      transform-origin: center center;
+    }
+    
+    .slide.active {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .bg-grid {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(16, 185, 129, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(16, 185, 129, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+    
+    .bg-glow {
+      position: absolute;
+      width: 900px;
+      height: 900px;
+      border-radius: 50%;
+      filter: blur(150px);
+      opacity: 0.18;
+      pointer-events: none;
+    }
+    
+    .bg-glow.green {
+      background: var(--primary);
+      top: -300px;
+      right: -200px;
+    }
+    
+    .bg-glow.blue {
+      background: var(--secondary);
+      bottom: -300px;
+      left: -200px;
+    }
+    
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 108px;
+      line-height: 1.05;
+      letter-spacing: -3px;
+    }
+    
+    h2 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 76px;
+      line-height: 1.1;
+      letter-spacing: -2px;
+    }
+    
+    h3 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 44px;
+      line-height: 1.2;
+    }
+    
+    p {
+      font-size: 28px;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+    
+    .text-gradient {
+      background: linear-gradient(135deg, var(--primary) 0%, #34d399 50%, var(--secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .text-primary { color: var(--primary); }
+    .text-secondary { color: var(--secondary); }
+    .text-muted { color: var(--muted); }
+    .text-destructive { color: var(--destructive); }
+    .text-warning { color: var(--warning); }
+    
+    .content {
+      position: relative;
+      z-index: 10;
+      padding: 50px 80px 90px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .center-content {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    
+    .split {
+      display: flex;
+      gap: 50px;
+      flex: 1;
+    }
+    
+    .split > * {
+      flex: 1;
+    }
+    
+    .card {
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 24px;
+      padding: 36px;
+      backdrop-filter: blur(10px);
+    }
+    
+    .card-highlight {
+      border-color: var(--primary);
+      box-shadow: 0 0 60px rgba(16, 185, 129, 0.2);
+    }
+    
+    .feature-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+    
+    .feature-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 24px;
+      font-size: 30px;
+    }
+    
+    .feature-list .icon {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 6px 24px rgba(16, 185, 129, 0.35);
+    }
+    
+    .feature-list .icon svg {
+      width: 32px;
+      height: 32px;
+      stroke: white;
+      stroke-width: 2;
+    }
+    
+    .icon-box {
+      width: 72px;
+      height: 72px;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.05));
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    
+    .icon-box svg {
+      width: 36px;
+      height: 36px;
+      stroke: var(--primary);
+      stroke-width: 1.5;
+    }
+    
+    .icon-box.blue {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.05));
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+    
+    .icon-box.blue svg { stroke: var(--secondary); }
+    
+    .icon-box.red {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.05));
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+    
+    .icon-box.red svg { stroke: var(--destructive); }
+    
+    .stats {
+      display: flex;
+      gap: 100px;
+      justify-content: center;
+    }
+    
+    .stat {
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 96px;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1;
+    }
+    
+    .stat-label {
+      font-size: 26px;
+      color: var(--muted);
+      margin-top: 12px;
+      font-weight: 500;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+    
+    .logo-icon {
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 12px 48px rgba(16, 185, 129, 0.5);
+    }
+    
+    .logo-icon svg {
+      width: 68px;
+      height: 68px;
+      fill: white;
+    }
+    
+    .logo-text {
+      font-family: 'Outfit', sans-serif;
+      font-size: 64px;
+      font-weight: 700;
+    }
+    
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 20px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .badge svg {
+      width: 22px;
+      height: 22px;
+      stroke-width: 2.5;
+    }
+    
+    .badge-critical {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--destructive);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+    
+    .badge-critical svg { stroke: var(--destructive); }
+    
+    .badge-high {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+    
+    .badge-high svg { stroke: var(--warning); }
+    
+    .badge-safe {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--primary);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+    
+    .badge-safe svg { stroke: var(--primary); }
+    
+    .slide-footer {
+      position: absolute;
+      bottom: 30px;
+      left: 80px;
+      right: 80px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-size: 20px;
+    }
+    
+    .slide-number {
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--card);
+      padding: 8px 16px;
+      border-radius: 8px;
+    }
+    
+    /* Watermark logo */
+    .slide-watermark {
+      position: absolute;
+      top: 40px;
+      right: 60px;
+      width: 72px;
+      height: 72px;
+      opacity: 0.5;
+      pointer-events: none;
+      z-index: 5;
+    }
+    
+    /* Title logo inline */
+    .title-logo {
+      width: 80px;
+      height: 80px;
+      vertical-align: middle;
+      margin-right: 16px;
+    }
+    
+    .code-block {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 16px;
+      padding: 28px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 20px;
+      overflow: hidden;
+    }
+    
+    .code-line {
+      line-height: 2;
+    }
+    
+    .code-comment { color: #8b949e; }
+    .code-keyword { color: #ff7b72; }
+    .code-string { color: #a5d6ff; }
+    .code-function { color: #d2a8ff; }
+    .code-number { color: #79c0ff; }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+    }
+    
+    .float {
+      animation: float 4s ease-in-out infinite;
+    }
+    
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 28px;
+      flex: 1;
+    }
+    
+    .tech-item {
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 32px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    
+    .tech-icon {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 20px;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(59, 130, 246, 0.15));
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .tech-icon svg {
+      width: 36px;
+      height: 36px;
+      stroke: var(--primary);
+      stroke-width: 1.5;
+    }
+    
+    .tech-name {
+      font-weight: 700;
+      font-size: 26px;
+    }
+    
+    .flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+    
+    .flow-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+    
+    .flow-icon {
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(135deg, var(--card), var(--card-lighter));
+      border: 2px solid rgba(16, 185, 129, 0.35);
+      border-radius: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+    
+    .flow-icon svg {
+      width: 56px;
+      height: 56px;
+      stroke: var(--primary);
+      stroke-width: 1.5;
+    }
+    
+    .flow-label {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--foreground);
+    }
+    
+    .flow-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+    }
+    
+    .flow-arrow svg {
+      width: 36px;
+      height: 36px;
+      stroke: var(--primary);
+      stroke-width: 2;
+    }
+    
+    .feature-card {
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 36px;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .feature-card .icon-box {
+      width: 64px;
+      height: 64px;
+    }
+    
+    .feature-card h3 {
+      font-size: 30px;
+      margin-bottom: 14px;
+    }
+    
+    .feature-card p {
+      font-size: 20px;
+      line-height: 1.5;
+    }
+    
+    .hero-icon {
+      width: 160px;
+      height: 160px;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.05));
+      border: 2px solid rgba(16, 185, 129, 0.3);
+      border-radius: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+    
+    .hero-icon svg {
+      width: 80px;
+      height: 80px;
+      stroke: var(--primary);
+      stroke-width: 1.5;
+    }
+    
+    .hero-icon.red {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.05));
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+    
+    .hero-icon.red svg {
+      stroke: var(--destructive);
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    
+    <!-- Slide 1: Title -->
+    <div class="slide active" id="slide-1">
+      <div class="bg-grid"></div>
+      <div class="bg-glow green"></div>
+      <div class="bg-glow blue"></div>
+      <img src="web/public/logo.png" alt="" class="slide-watermark">
+      
+      <div class="content center-content">
+        <div class="logo float" style="margin-bottom: 40px;">
+          <div class="logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="white" opacity="0.2"/>
+              <circle cx="8" cy="10" r="1.5" fill="white"/>
+              <circle cx="16" cy="10" r="1.5" fill="white"/>
+              <path d="M12 16c2.5 0 4-1.5 4-3H8c0 1.5 1.5 3 4 3z" fill="white"/>
+              <ellipse cx="6" cy="8" rx="3" ry="4" fill="white" opacity="0.3"/>
+              <ellipse cx="18" cy="8" rx="3" ry="4" fill="white" opacity="0.3"/>
+            </svg>
+          </div>
+          <span class="logo-text">SheepAI</span>
+        </div>
+        
+        <h1 style="margin-bottom: 28px;">
+          <span class="text-gradient">CyberShepherd</span>
+        </h1>
+        
+        <p style="font-size: 40px; max-width: 1100px; margin-bottom: 70px;">
+          AI-powered cybersecurity news aggregation, filtering, and summarization platform
+        </p>
+        
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-value">95%</div>
+            <div class="stat-label">Noise Reduction</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value">&lt;2min</div>
+            <div class="stat-label">vs 45min Daily</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value">500+</div>
+            <div class="stat-label">Articles Analyzed</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="slide-footer">
+        <span>SheepAI Hackathon 2025 • Zagreb, Croatia</span>
+        <span class="slide-number">01 / 08</span>
+      </div>
+    </div>
+    
+    <!-- Slide 2: Problem -->
+    <div class="slide" id="slide-2">
+      <div class="bg-grid"></div>
+      <div class="bg-glow green"></div>
+      <img src="web/public/logo.png" alt="" class="slide-watermark">
+      
+      <div class="content">
+        <h2 style="margin-bottom: 40px;">The <span class="text-destructive">Problem</span></h2>
+        
+        <div class="split">
+          <div style="display: flex; flex-direction: column;">
+            <h3 style="margin-bottom: 36px; color: var(--muted); font-size: 40px;">Security Teams Are Drowning</h3>
+            
+            <ul class="feature-list" style="flex: 1; justify-content: space-around;">
+              <li>
+                <span class="icon"><i data-lucide="newspaper"></i></span>
+                <div>
+                  <strong style="color: var(--foreground); font-size: 32px;">100+ daily articles</strong>
+                  <p style="font-size: 24px; margin-top: 8px;">From The Hacker News, BleepingComputer, CISA alerts...</p>
+                </div>
+              </li>
+              <li>
+                <span class="icon"><i data-lucide="trash-2"></i></span>
+                <div>
+                  <strong style="color: var(--foreground); font-size: 32px;">95% is irrelevant noise</strong>
+                  <p style="font-size: 24px; margin-top: 8px;">WordPress exploits for a Python/AWS team? Useless.</p>
+                </div>
+              </li>
+              <li>
+                <span class="icon"><i data-lucide="clock"></i></span>
+                <div>
+                  <strong style="color: var(--foreground); font-size: 32px;">45+ minutes daily</strong>
+                  <p style="font-size: 24px; margin-top: 8px;">Wasted scanning headlines that don't apply</p>
+                </div>
+              </li>
+              <li>
+                <span class="icon"><i data-lucide="alert-triangle"></i></span>
+                <div>
+                  <strong style="color: var(--foreground); font-size: 32px;">Critical threats get buried</strong>
+                  <p style="font-size: 24px; margin-top: 8px;">The one article that matters is lost in the noise</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+          
+          <div class="card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(239, 68, 68, 0.05); border-color: rgba(239, 68, 68, 0.3); padding: 48px;">
+            <div style="text-align: center;">
+              <div class="hero-icon red" style="margin: 0 auto 28px;">
+                <i data-lucide="brain-cog"></i>
+              </div>
+              <h3 class="text-destructive" style="font-size: 48px;">Information Overload</h3>
+              <p style="margin-top: 28px; font-size: 26px; line-height: 1.6;">
+                A CISO using AWS + Python shouldn't see WordPress exploits.<br><br>
+                They need the Python supply chain attack that could hit them <strong style="color: var(--foreground);">Monday morning</strong>.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="slide-footer">
+        <span>SheepAI Hackathon 2025</span>
+        <span class="slide-number">02 / 08</span>
+      </div>
+    </div>
+    
+    <!-- Slide 3: Solution -->
+    <div class="slide" id="slide-3">
+      <div class="bg-grid"></div>
+      <div class="bg-glow green"></div>
+      <div class="bg-glow blue"></div>
+      <img src="web/public/logo.png" alt="" class="slide-watermark">
+      
+      <div class="content">
+        <h2 style="margin-bottom: 40px;">The <span class="text-gradient">Solution</span></h2>
+        
+        <div class="split">
+          <div class="card card-highlight" style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 48px;">
+            <div style="text-align: center;">
+              <div class="hero-icon" style="margin: 0 auto 28px;">
+                <i data-lucide="shield-check"></i>
+              </div>
+              <h3 class="text-primary" style="font-size: 48px;">Your AI Security Analyst</h3>
+              <p style="margin-top: 28px; font-size: 28px; line-height: 1.6;">
+                CyberShepherd watches the flock so you don't have to.<br><br>
+                It understands YOUR tech stack and delivers only what matters.
+              </p>
+            </div>
+          </div>
+          
+          <div style="display: flex; flex-direction: column; justify-content: center;">
+            <ul class="feature-list" style="gap: 36px;">
+              <li>
+                <span class="icon"><i data-lucide="refresh-cw"></i></span>
+                <div>
+                  <strong style="color: var(--foreground); font-size: 34px;">Auto-Scrape & Analyze</strong>
+                  <p style="font-size: 24px; margin-top: 10px;">Hourly ingestion from top security sources, AI-analyzed with GPT-4o</p>
+                </div>
+              </li>
+              <li>
+                <span class="icon"><i data-lucide="filter"></i></span>
+                <div>
+                  <strong style="color: var(--foreground); font-size: 34px;">Personalized Filtering</strong>
+                  <p style="font-size: 24px; margin-top: 10px;">Tell us your stack once. We filter 10,000 articles to the 5 that matter.</p>
+                </div>
+              </li>
+              <li>
+                <span class="icon"><i data-lucide="gauge"></i></span>
+                <div>
+                  <strong style="color: var(--foreground); font-size: 34px;">Priority Scoring</strong>
+                  <p style="font-size: 24px; margin-top: 10px;">Critical/High/Medium/Low classification with action items</p>
+                </div>
+              </li>
+              <li>
+                <span class="icon"><i data-lucide="message-square"></i></span>
+                <div>
+                  <strong style="color: var(--foreground); font-size: 34px;">RAG Chatbot</strong>
+                  <p style="font-size: 24px; margin-top: 10px;">"Does this npm attack affect our Lambda?" — Get instant answers.</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <div class="slide-footer">
+        <span>SheepAI Hackathon 2025</span>
+        <span class="slide-number">03 / 08</span>
+      </div>
+    </div>
+    
+    <!-- Slide 4: Architecture -->
+    <div class="slide" id="slide-4">
+      <div class="bg-grid"></div>
+      <div class="bg-glow green"></div>
+      <img src="web/public/logo.png" alt="" class="slide-watermark">
+      
+      <div class="content">
+        <h2 style="margin-bottom: 36px;">How It <span class="text-gradient">Works</span></h2>
+        
+        <div class="flow" style="margin-bottom: 36px;">
+          <div class="flow-step">
+            <div class="flow-icon"><i data-lucide="globe"></i></div>
+            <span class="flow-label">Scrape</span>
+          </div>
+          <span class="flow-arrow"><i data-lucide="chevron-right"></i></span>
+          <div class="flow-step">
+            <div class="flow-icon"><i data-lucide="sparkles"></i></div>
+            <span class="flow-label">Analyze</span>
+          </div>
+          <span class="flow-arrow"><i data-lucide="chevron-right"></i></span>
+          <div class="flow-step">
+            <div class="flow-icon"><i data-lucide="database"></i></div>
+            <span class="flow-label">Embed</span>
+          </div>
+          <span class="flow-arrow"><i data-lucide="chevron-right"></i></span>
+          <div class="flow-step">
+            <div class="flow-icon"><i data-lucide="search"></i></div>
+            <span class="flow-label">Search</span>
+          </div>
+          <span class="flow-arrow"><i data-lucide="chevron-right"></i></span>
+          <div class="flow-step">
+            <div class="flow-icon"><i data-lucide="send"></i></div>
+            <span class="flow-label">Deliver</span>
+          </div>
+        </div>
+        
+        <div class="split" style="gap: 36px; flex: 1;">
+          <div class="card" style="padding: 36px; display: flex; flex-direction: column;">
+            <div style="display: flex; align-items: center; gap: 18px; margin-bottom: 24px;">
+              <div class="icon-box" style="width: 56px; height: 56px; margin: 0;">
+                <i data-lucide="download"></i>
+              </div>
+              <h3 style="font-size: 32px; color: var(--primary);">Ingestion Pipeline</h3>
+            </div>
+            <div class="code-block" style="font-size: 22px; flex: 1; display: flex; flex-direction: column; justify-content: center;">
+              <div class="code-line"><span class="code-comment"># Every hour:</span></div>
+              <div class="code-line"><span class="code-keyword">1.</span> Scrape The Hacker News RSS</div>
+              <div class="code-line"><span class="code-keyword">2.</span> Deduplicate against existing URLs</div>
+              <div class="code-line"><span class="code-keyword">3.</span> Extract full article content</div>
+              <div class="code-line"><span class="code-keyword">4.</span> GPT-4o-mini → Structured Analysis</div>
+              <div class="code-line"><span class="code-keyword">5.</span> Generate embeddings (1536d)</div>
+              <div class="code-line"><span class="code-keyword">6.</span> Store in Supabase + pgvector</div>
+            </div>
+          </div>
+          
+          <div class="card" style="padding: 36px; display: flex; flex-direction: column;">
+            <div style="display: flex; align-items: center; gap: 18px; margin-bottom: 24px;">
+              <div class="icon-box blue" style="width: 56px; height: 56px; margin: 0;">
+                <i data-lucide="bot"></i>
+              </div>
+              <h3 style="font-size: 32px; color: var(--secondary);">RAG Chatbot</h3>
+            </div>
+            <div class="code-block" style="font-size: 22px; flex: 1; display: flex; flex-direction: column; justify-content: center;">
+              <div class="code-line"><span class="code-comment"># User Query:</span> <span class="code-string">"nvidia bugs RCE"</span></div>
+              <div class="code-line"><span class="code-keyword">1.</span> Enrich query (expand abbreviations)</div>
+              <div class="code-line"><span class="code-keyword">2.</span> Keyword pre-search (vendor names)</div>
+              <div class="code-line"><span class="code-keyword">3.</span> Semantic search (pgvector)</div>
+              <div class="code-line"><span class="code-keyword">4.</span> Merge + rank top 10 articles</div>
+              <div class="code-line"><span class="code-keyword">5.</span> Build context prompt</div>
+              <div class="code-line"><span class="code-keyword">6.</span> Stream GPT-4o response via SSE</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="slide-footer">
+        <span>SheepAI Hackathon 2025</span>
+        <span class="slide-number">04 / 08</span>
+      </div>
+    </div>
+    
+    <!-- Slide 5: Features -->
+    <div class="slide" id="slide-5">
+      <div class="bg-grid"></div>
+      <div class="bg-glow blue"></div>
+      <img src="web/public/logo.png" alt="" class="slide-watermark">
+      
+      <div class="content">
+        <h2 style="margin-bottom: 36px;">Key <span class="text-gradient">Features</span></h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; flex: 1;">
+          <div class="feature-card">
+            <div class="icon-box">
+              <i data-lucide="map"></i>
+            </div>
+            <h3>Interactive Map</h3>
+            <p>Click regions to filter news by geography. See threat hotspots at a glance.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="icon-box blue">
+              <i data-lucide="bell"></i>
+            </div>
+            <h3>Slack Alerts</h3>
+            <p>Instant notifications for Critical/High priority threats to your security channel.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="icon-box">
+              <i data-lucide="building-2"></i>
+            </div>
+            <h3>Company Profiler</h3>
+            <p>Paste your website URL → AI suggests the perfect filters for your tech stack.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="icon-box blue">
+              <i data-lucide="file-text"></i>
+            </div>
+            <h3>Smart Summaries</h3>
+            <p>TL;DR, Key Takeaways, Action Items — understand any threat in 30 seconds.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="icon-box">
+              <i data-lucide="search"></i>
+            </div>
+            <h3>Semantic Search</h3>
+            <p>Natural language queries find related articles even without exact keywords.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="icon-box blue">
+              <i data-lucide="tags"></i>
+            </div>
+            <h3>Smart Tagging</h3>
+            <p>Auto-categorization: Security, AI, Cloud, Data Breach, Vulnerability, and more.</p>
+          </div>
+        </div>
+        
+        <div style="display: flex; justify-content: center; gap: 32px; margin-top: 32px;">
+          <span class="badge badge-critical">
+            <i data-lucide="alert-circle"></i>
+            CRITICAL
+          </span>
+          <span class="badge badge-high">
+            <i data-lucide="alert-triangle"></i>
+            HIGH
+          </span>
+          <span class="badge badge-safe">
+            <i data-lucide="check-circle"></i>
+            INFO
+          </span>
+        </div>
+      </div>
+      
+      <div class="slide-footer">
+        <span>SheepAI Hackathon 2025</span>
+        <span class="slide-number">05 / 08</span>
+      </div>
+    </div>
+    
+    <!-- Slide 6: Tech Stack -->
+    <div class="slide" id="slide-6">
+      <div class="bg-grid"></div>
+      <div class="bg-glow green"></div>
+      <div class="bg-glow blue"></div>
+      <img src="web/public/logo.png" alt="" class="slide-watermark">
+      
+      <div class="content">
+        <h2 style="margin-bottom: 36px;">Tech <span class="text-gradient">Stack</span></h2>
+        
+        <div class="tech-grid">
+          <div class="tech-item">
+            <div class="tech-icon"><i data-lucide="atom"></i></div>
+            <div class="tech-name">Next.js 15</div>
+            <div style="color: var(--muted); font-size: 18px; margin-top: 10px;">React 19 • App Router</div>
+          </div>
+          <div class="tech-item">
+            <div class="tech-icon"><i data-lucide="zap"></i></div>
+            <div class="tech-name">FastAPI</div>
+            <div style="color: var(--muted); font-size: 18px; margin-top: 10px;">Python 3.11 • APScheduler</div>
+          </div>
+          <div class="tech-item">
+            <div class="tech-icon"><i data-lucide="database"></i></div>
+            <div class="tech-name">Supabase</div>
+            <div style="color: var(--muted); font-size: 18px; margin-top: 10px;">PostgreSQL • pgvector</div>
+          </div>
+          <div class="tech-item">
+            <div class="tech-icon"><i data-lucide="brain"></i></div>
+            <div class="tech-name">OpenAI</div>
+            <div style="color: var(--muted); font-size: 18px; margin-top: 10px;">GPT-4o-mini • Embeddings</div>
+          </div>
+          <div class="tech-item">
+            <div class="tech-icon"><i data-lucide="link"></i></div>
+            <div class="tech-name">LangChain</div>
+            <div style="color: var(--muted); font-size: 18px; margin-top: 10px;">Structured Output</div>
+          </div>
+          <div class="tech-item">
+            <div class="tech-icon"><i data-lucide="cloud-lightning"></i></div>
+            <div class="tech-name">Edge Functions</div>
+            <div style="color: var(--muted); font-size: 18px; margin-top: 10px;">Deno • SSE Streaming</div>
+          </div>
+          <div class="tech-item">
+            <div class="tech-icon"><i data-lucide="palette"></i></div>
+            <div class="tech-name">Tailwind CSS</div>
+            <div style="color: var(--muted); font-size: 18px; margin-top: 10px;">shadcn/ui • Zustand</div>
+          </div>
+          <div class="tech-item">
+            <div class="tech-icon"><i data-lucide="container"></i></div>
+            <div class="tech-name">Docker</div>
+            <div style="color: var(--muted); font-size: 18px; margin-top: 10px;">Railway • Vercel</div>
+          </div>
+        </div>
+        
+        <div class="card" style="margin-top: 32px; display: flex; gap: 0; justify-content: space-around; align-items: center; padding: 36px 48px;">
+          <div style="text-align: center; flex: 1;">
+            <div class="stat-value" style="font-size: 56px;">517</div>
+            <div class="stat-label" style="font-size: 20px;">Articles Analyzed</div>
+          </div>
+          <div style="width: 2px; height: 70px; background: var(--muted); opacity: 0.2;"></div>
+          <div style="text-align: center; flex: 1;">
+            <div class="stat-value" style="font-size: 56px;">1536</div>
+            <div class="stat-label" style="font-size: 20px;">Embedding Dimensions</div>
+          </div>
+          <div style="width: 2px; height: 70px; background: var(--muted); opacity: 0.2;"></div>
+          <div style="text-align: center; flex: 1;">
+            <div class="stat-value" style="font-size: 56px;">3</div>
+            <div class="stat-label" style="font-size: 20px;">Edge Functions</div>
+          </div>
+          <div style="width: 2px; height: 70px; background: var(--muted); opacity: 0.2;"></div>
+          <div style="text-align: center; flex: 1;">
+            <div class="stat-value" style="font-size: 56px;">10+</div>
+            <div class="stat-label" style="font-size: 20px;">API Endpoints</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="slide-footer">
+        <span>SheepAI Hackathon 2025</span>
+        <span class="slide-number">06 / 08</span>
+      </div>
+    </div>
+    
+    <!-- Slide 7: CTA -->
+    <div class="slide" id="slide-7">
+      <div class="bg-grid"></div>
+      <div class="bg-glow green"></div>
+      <div class="bg-glow blue"></div>
+      <img src="web/public/logo.png" alt="" class="slide-watermark">
+      
+      <div class="content center-content">
+        <div class="logo float" style="margin-bottom: 36px;">
+          <img src="web/public/logo.png" alt="CyberShepherd" style="width: 100px; height: 100px;">
+          <span class="logo-text">CyberShepherd</span>
+        </div>
+        
+        <h1 style="margin-bottom: 28px; font-size: 92px;">
+          Stop <span class="text-destructive">Reading</span>.<br>
+          Start <span class="text-gradient">Knowing</span>.
+        </h1>
+        
+        <p style="font-size: 36px; max-width: 900px; margin-bottom: 50px;">
+          Your competitors are still reading.<br>
+          <strong style="color: var(--foreground);">You're already patched.</strong>
+        </p>
+        
+        <div style="display: flex; gap: 36px; justify-content: center; align-items: center;">
+          <div class="card" style="padding: 28px 56px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border: none; display: flex; align-items: center; gap: 18px; cursor: pointer;">
+            <i data-lucide="rocket" style="width: 32px; height: 32px; stroke: white;"></i>
+            <span style="font-size: 30px; font-weight: 700;">Try CyberShepherd</span>
+          </div>
+          <div class="card" style="padding: 28px 56px; display: flex; align-items: center; gap: 18px; cursor: pointer;">
+            <i data-lucide="play" style="width: 32px; height: 32px; stroke: var(--primary);"></i>
+            <span style="font-size: 30px; font-weight: 600;">View Demo</span>
+          </div>
+        </div>
+        
+        <div style="margin-top: 60px; display: flex; gap: 56px; color: var(--muted); font-size: 22px;">
+          <span style="display: flex; align-items: center; gap: 12px;">
+            <i data-lucide="trophy" style="width: 26px; height: 26px;"></i>
+            SheepAI Hackathon 2025
+          </span>
+          <span style="display: flex; align-items: center; gap: 12px;">
+            <i data-lucide="map-pin" style="width: 26px; height: 26px;"></i>
+            Zagreb, Croatia
+          </span>
+          <span style="display: flex; align-items: center; gap: 12px;">
+            <i data-lucide="users" style="width: 26px; height: 26px;"></i>
+            Team CyberShepherd
+          </span>
+        </div>
+      </div>
+      
+      <div class="slide-footer">
+        <span>Thank you!</span>
+        <span class="slide-number">07 / 08</span>
+      </div>
+    </div>
+    
+    <!-- Slide 8: BEEEE! -->
+    <div class="slide" id="slide-8">
+      <div class="bg-grid"></div>
+      <div class="bg-glow green"></div>
+      <div class="bg-glow blue"></div>
+      <img src="web/public/logo.png" alt="" class="slide-watermark">
+      
+      <div class="content center-content">
+        <img src="web/public/logo.png" alt="Sheep" style="width: 300px; height: 300px; margin-bottom: 48px;" class="float">
+        
+        <h1 style="font-size: 180px; letter-spacing: -5px;">
+          <span class="text-gradient">BEEEE!</span>
+        </h1>
+      </div>
+      
+      <div class="slide-footer">
+        <span>🐑</span>
+        <span class="slide-number">08 / 08</span>
+      </div>
+    </div>
+    
+  </div>
+  
+  
+  <script>
+    lucide.createIcons();
+    
+    let currentSlide = 1;
+    const totalSlides = 8;
+    
+    function showSlide(n) {
+      if (n > totalSlides) currentSlide = 1;
+      else if (n < 1) currentSlide = totalSlides;
+      else currentSlide = n;
+      
+      document.querySelectorAll('.slide').forEach(slide => {
+        slide.classList.remove('active');
+      });
+      
+      document.getElementById(`slide-${currentSlide}`).classList.add('active');
+      lucide.createIcons();
+      scaleSlide();
+    }
+    
+    function scaleSlide() {
+      const slide = document.querySelector('.slide.active');
+      if (!slide) return;
+      
+      const scaleX = window.innerWidth / 1920;
+      const scaleY = window.innerHeight / 1080;
+      const scale = Math.min(scaleX, scaleY);
+      
+      slide.style.transform = `scale(${scale})`;
+    }
+    
+    document.addEventListener('keydown', (e) => {
+      switch(e.key) {
+        case 'ArrowRight':
+        case ' ':
+        case 'Enter':
+          showSlide(currentSlide + 1);
+          break;
+        case 'ArrowLeft':
+        case 'Backspace':
+          showSlide(currentSlide - 1);
+          break;
+        case 'Home':
+          showSlide(1);
+          break;
+        case 'End':
+          showSlide(totalSlides);
+          break;
+        case 'f':
+        case 'F':
+          toggleFullscreen();
+          break;
+      }
+    });
+    
+    document.addEventListener('click', (e) => {
+      if (e.clientX > window.innerWidth / 2) {
+        showSlide(currentSlide + 1);
+      } else {
+        showSlide(currentSlide - 1);
+      }
+    });
+    
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    }
+    
+    window.addEventListener('resize', scaleSlide);
+    showSlide(1);
+  </script>
+</body>
+</html>

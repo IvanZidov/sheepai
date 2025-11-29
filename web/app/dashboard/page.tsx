@@ -160,33 +160,70 @@ export default function DashboardPage() {
     }, DEBOUNCE_MS);
   }, [loadArticles, performSemanticSearch]);
 
-  // Watch for search query changes
+  // Track if initial load has happened
+  const initialLoadRef = useRef(false);
+  const filtersRef = useRef({ categoryFilter, regionFilter, technologyFilter, priorityFilter, dateRange });
+
+  // Initial load only once
   useEffect(() => {
-    debouncedSearch(searchQuery);
+    if (!initialLoadRef.current) {
+      initialLoadRef.current = true;
+      loadArticles(1);
+    }
+  }, [loadArticles]);
+
+  // Watch for search query changes (debounced)
+  useEffect(() => {
+    if (!initialLoadRef.current) return; // Skip until initial load
+    
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    if (!searchQuery.trim()) {
+      // Only reload if search was cleared (not on initial empty)
+      if (isSemanticSearch) {
+        loadArticles(1);
+      }
+      return;
+    }
+    
+    setIsSearching(true);
+    searchTimeoutRef.current = setTimeout(() => {
+      performSemanticSearch(searchQuery);
+    }, DEBOUNCE_MS);
     
     return () => {
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [searchQuery, debouncedSearch]);
+  }, [searchQuery]);
 
-  // Reload when filters change (but not search query)
+  // Reload when filters change (but not on initial mount)
   useEffect(() => {
+    if (!initialLoadRef.current) return; // Skip initial load
+    
+    // Check if filters actually changed
+    const prev = filtersRef.current;
+    const filtersChanged = 
+      JSON.stringify(prev.categoryFilter) !== JSON.stringify(categoryFilter) ||
+      JSON.stringify(prev.regionFilter) !== JSON.stringify(regionFilter) ||
+      JSON.stringify(prev.technologyFilter) !== JSON.stringify(technologyFilter) ||
+      JSON.stringify(prev.priorityFilter) !== JSON.stringify(priorityFilter) ||
+      prev.dateRange !== dateRange;
+    
+    if (!filtersChanged) return;
+    
+    // Update ref
+    filtersRef.current = { categoryFilter, regionFilter, technologyFilter, priorityFilter, dateRange };
+    
     if (!searchQuery.trim()) {
       loadArticles(1);
     } else {
-      // If searching, re-run semantic search with new filters
       performSemanticSearch(searchQuery);
     }
   }, [categoryFilter, regionFilter, technologyFilter, priorityFilter, dateRange]);
-
-  // Initial load
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      loadArticles(1);
-    }
-  }, []);
 
   const loadMoreArticles = () => {
     if (!loadingMore && hasMore && !isSemanticSearch) {
