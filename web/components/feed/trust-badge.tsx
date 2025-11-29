@@ -40,12 +40,11 @@ export function TrustBadge({ status, note, className }: TrustBadgeProps) {
             <span className="text-xs font-medium">{text}</span>
           </Badge>
         </TooltipTrigger>
-        <TooltipContent className="max-w-xs bg-zinc-900 border-zinc-800">
-          <p className="font-semibold mb-1 text-sm text-zinc-100">Gemini Fact Check</p>
-          <p className="text-xs text-zinc-400">{note || "No details available."}</p>
+        <TooltipContent className="max-w-xs bg-popover border-border">
+          <p className="font-semibold mb-1 text-sm text-popover-foreground">Gemini Fact Check</p>
+          <p className="text-xs text-muted-foreground">{note || "No details available."}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );
 }
-

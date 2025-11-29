@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, Settings, User } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function ShepherdNav() {
   const pathname = usePathname();
@@ -24,10 +25,10 @@ export function ShepherdNav() {
              />
           </Link>
           <Link href="/" className="font-heading font-bold text-xl tracking-tight flex items-center hover:opacity-80 transition-opacity">
-            <span className="text-zinc-100">CYBER</span>
-            <span className="text-brand-green">SHEPHERD</span>
+            <span className="text-foreground">CYBER</span>
+            <span className="text-primary">SHEPHERD</span>
           </Link>
-          <Badge variant="secondary" className="text-[10px] h-5 ml-1 font-mono text-muted-foreground border-zinc-800 bg-zinc-900">BETA</Badge>
+          <Badge variant="secondary" className="text-[10px] h-5 ml-1 font-mono text-muted-foreground border-border bg-muted">BETA</Badge>
         </div>
         
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
@@ -49,7 +50,8 @@ export function ShepherdNav() {
                     <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
                         <Settings className="w-4 h-4" />
                     </Button>
-                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-brand-green/20 to-brand-teal/20 border border-zinc-700 ml-2 flex items-center justify-center text-brand-green cursor-pointer hover:bg-brand-green/20 transition-colors">
+                    <ThemeToggle />
+                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-brand-green/20 to-brand-teal/20 border border-border ml-2 flex items-center justify-center text-brand-green cursor-pointer hover:bg-brand-green/20 transition-colors">
                         <User className="w-4 h-4" />
                     </div>
                  </>
@@ -61,8 +63,9 @@ export function ShepherdNav() {
                     <Link href="/#pricing" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors hidden sm:block">
                         Pricing
                     </Link>
+                    <ThemeToggle />
                     <Link href="/dashboard">
-                        <Button variant="default" size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white ml-2">
+                        <Button variant="default" size="sm" className="ml-2">
                             Login
                         </Button>
                     </Link>

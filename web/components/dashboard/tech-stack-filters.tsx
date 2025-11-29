@@ -6,12 +6,6 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 
-// Create Label component if it doesn't exist, otherwise import it
-// For now I'll define a simple label wrapper since I didn't check if label exists but I saw @radix-ui/react-label in package.json
-// Wait, I should probably create components/ui/label.tsx to be safe or check if it exists.
-// I will rely on the fact that I installed @radix-ui/react-label but I'll just use a primitive label for now to save a step or check.
-// Actually, let's just use a span/label tag.
-
 export function TechStackFilters() {
   const { techStack, toggleTech } = useUserPreferences();
 
@@ -19,7 +13,7 @@ export function TechStackFilters() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-foreground">My Tech Stack</h3>
-        <Badge variant="secondary" className="text-[10px] bg-zinc-800 text-zinc-400 font-mono">
+        <Badge variant="secondary" className="text-[10px] bg-muted text-muted-foreground font-mono">
           {techStack.length} SELECTED
         </Badge>
       </div>
@@ -32,11 +26,11 @@ export function TechStackFilters() {
                 id={`filter-${tech.id}`} 
                 checked={techStack.includes(tech.id)}
                 onCheckedChange={() => toggleTech(tech.id)}
-                className="border-zinc-700 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                className="border-border data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
               />
               <label
                 htmlFor={`filter-${tech.id}`}
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-zinc-300 cursor-pointer"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
               >
                 {tech.label}
               </label>
@@ -47,4 +41,3 @@ export function TechStackFilters() {
     </div>
   );
 }
-

@@ -29,7 +29,7 @@ export function ShepherdChat() {
           <MessageSquare className="h-6 w-6" />
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-[400px] flex flex-col p-0 sm:w-[540px] bg-zinc-950 border-l border-border/40">
+      <SheetContent className="w-[400px] flex flex-col p-0 sm:w-[540px] bg-background border-l border-border/40">
         <SheetHeader className="p-6 border-b border-border/40">
             <SheetTitle className="flex items-center gap-2 text-foreground">
                 <Bot className="w-5 h-5 text-primary" />
@@ -42,20 +42,20 @@ export function ShepherdChat() {
                     {messages.map((m, i) => (
                         <div key={i} className={`flex gap-3 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                              {m.role === 'bot' && <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0"><Bot className="w-4 h-4 text-primary" /></div>}
-                             <div className={`rounded-lg px-4 py-2 max-w-[80%] text-sm ${m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-zinc-800 text-zinc-100'}`}>
+                             <div className={`rounded-lg px-4 py-2 max-w-[80%] text-sm ${m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}>
                                 {m.text}
                              </div>
                         </div>
                     ))}
                 </div>
             </ScrollArea>
-            <div className="p-4 border-t border-border/40 bg-zinc-900/50">
+            <div className="p-4 border-t border-border/40 bg-muted/30">
                 <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex gap-2">
                     <Input 
                         value={input} 
                         onChange={e => setInput(e.target.value)} 
                         placeholder="Ask about a threat..." 
-                        className="bg-zinc-900 border-zinc-700 focus-visible:ring-primary" 
+                        className="bg-background border-border focus-visible:ring-primary" 
                     />
                     <Button type="submit" size="icon" variant="default">
                         <Send className="w-4 h-4" />
@@ -67,4 +67,3 @@ export function ShepherdChat() {
     </Sheet>
   );
 }
-

@@ -1,3 +1,5 @@
+"use client";
+
 import { Bot, Layers, Network, SearchCheck, Zap } from "lucide-react";
 
 export function FeatureCards() {
@@ -23,24 +25,24 @@ export function FeatureCards() {
   ];
 
   return (
-    <section className="py-24 bg-zinc-950 border-y border-zinc-900">
+    <section className="py-24 bg-background border-y border-border">
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-3 gap-8">
           {features.map((feature, index) => (
             <div 
               key={index} 
-              className="relative p-8 rounded-2xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700 transition-all duration-300 hover:-translate-y-1 group overflow-hidden"
+              className="relative p-8 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300 hover:-translate-y-1 group overflow-hidden shadow-sm"
             >
               <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
               
               <div className="relative z-10">
-                <div className="w-12 h-12 rounded-lg bg-zinc-800/50 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 border border-zinc-700/50">
+                <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 border border-border">
                   {feature.icon}
                 </div>
-                <h3 className="text-xl font-bold text-zinc-100 mb-3 font-heading">
+                <h3 className="text-xl font-bold text-card-foreground mb-3 font-heading">
                   {feature.title}
                 </h3>
-                <p className="text-zinc-400 leading-relaxed">
+                <p className="text-muted-foreground leading-relaxed">
                   {feature.description}
                 </p>
               </div>
@@ -51,4 +53,3 @@ export function FeatureCards() {
     </section>
   );
 }
-

@@ -18,17 +18,16 @@ export function AffectedEntities({ entities }: AffectedEntitiesProps) {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-white font-heading">Affected Scope</h3>
+      <h3 className="text-lg font-semibold text-foreground font-heading">Affected Scope</h3>
       <div className="flex flex-wrap gap-2">
         {entities.map((entity, i) => (
-          <div key={i} className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-zinc-800 bg-zinc-900/50 text-sm text-zinc-300">
+          <div key={i} className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-muted/50 text-sm text-foreground">
             {getIcon(entity.entity_type)}
             <span className="font-medium">{entity.name}</span>
-            {entity.details && <span className="text-zinc-500 text-xs border-l border-zinc-700 pl-2 ml-1">{entity.details}</span>}
+            {entity.details && <span className="text-muted-foreground text-xs border-l border-border pl-2 ml-1">{entity.details}</span>}
           </div>
         ))}
       </div>
     </div>
   );
 }
-

@@ -100,7 +100,7 @@ export function ThreatCard({ article, onVerify }: ThreatCardProps) {
         <CardContent className="pb-4 flex flex-col sm:flex-row gap-4 relative z-20">
           <div className="flex-1 space-y-3">
               {/* TL;DR Section */}
-              <p className="text-sm text-muted-foreground italic border-l-2 border-zinc-700 pl-3 py-1">
+              <p className="text-sm text-muted-foreground italic border-l-2 border-border pl-3 py-1">
                   "{article.tldr}"
               </p>
 
@@ -108,14 +108,14 @@ export function ThreatCard({ article, onVerify }: ThreatCardProps) {
               <ul className="space-y-1.5">
                   {article.key_takeaways.map((item, i) => (
                       <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                          <span className={cn("block w-1 h-1 mt-1.5 rounded-full shrink-0", item.highlight ? "bg-primary" : "bg-zinc-600")} />
+                          <span className={cn("block w-1 h-1 mt-1.5 rounded-full shrink-0", item.highlight ? "bg-primary" : "bg-muted-foreground/50")} />
                           <span className={cn(item.highlight && "text-foreground font-medium")}>{item.point}</span>
                       </li>
                   ))}
               </ul>
           </div>
           {/* Gauge positioned to the right of content */}
-          <div className="shrink-0 hidden sm:flex flex-col items-center justify-center bg-zinc-900/30 rounded-lg p-2 border border-zinc-800/50">
+          <div className="shrink-0 hidden sm:flex flex-col items-center justify-center bg-muted/30 rounded-lg p-2 border border-border/50">
               <span className="text-[10px] font-mono text-muted-foreground uppercase mb-1">Relevance</span>
               <ThreatMeter score={gaugeScore} size="sm" />
           </div>
@@ -127,7 +127,7 @@ export function ThreatCard({ article, onVerify }: ThreatCardProps) {
                   <Badge 
                       key={cat} 
                       variant="outline" 
-                      className="text-[10px] px-2 py-0.5 h-5 font-mono text-zinc-400 border-zinc-700 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all cursor-pointer hover:scale-105 uppercase"
+                      className="text-[10px] px-2 py-0.5 h-5 font-mono text-muted-foreground border-border hover:border-primary hover:text-primary hover:bg-primary/5 transition-all cursor-pointer hover:scale-105 uppercase"
                   >
                       #{cat.replace('_', '-')}
                   </Badge>
@@ -159,7 +159,7 @@ export function ThreatCard({ article, onVerify }: ThreatCardProps) {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="h-8 gap-1.5 text-xs border-dashed border-zinc-700 hover:border-primary/50 hover:bg-primary/5"
+                  className="h-8 gap-1.5 text-xs border-dashed border-border hover:border-primary/50 hover:bg-primary/5"
                   onClick={handleVerify}
                   disabled={isVerifying}
                 >

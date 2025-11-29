@@ -69,7 +69,7 @@ export default function DashboardPage() {
 
   const filters = (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 pb-2 border-b border-zinc-800">
+      <div className="flex items-center gap-2 pb-2 border-b border-border">
         <Filter className="w-4 h-4 text-emerald-500" />
         <h2 className="font-semibold text-sm text-foreground">Filters</h2>
       </div>
@@ -86,13 +86,13 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="min-h-screen bg-zinc-950 font-sans selection:bg-emerald-500/20 selection:text-emerald-500">
+    <div className="min-h-screen bg-background font-sans selection:bg-emerald-500/20 selection:text-emerald-500">
       <ShepherdNav />
       
       <DashboardShell filters={filters} visuals={visuals}>
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-white font-heading">My Feed</h1>
-            <div className="text-xs text-zinc-500 font-mono">
+            <h1 className="text-2xl font-bold text-foreground font-heading">My Feed</h1>
+            <div className="text-xs text-muted-foreground font-mono">
                 {filteredArticles.length} RELEVANT THREATS
             </div>
           </div>
@@ -100,19 +100,19 @@ export default function DashboardPage() {
           <div className="space-y-6 pb-20">
             {loading ? (
                 Array.from({length: 3}).map((_, i) => (
-                    <div key={i} className="h-64 rounded-xl bg-zinc-900/50 border border-zinc-800 animate-pulse" />
+                    <div key={i} className="h-64 rounded-xl bg-muted/50 border border-border animate-pulse" />
                 ))
             ) : filteredArticles.length > 0 ? (
                 filteredArticles.map(article => (
                     <ThreatCard key={article.id} article={article} onVerify={onVerify} />
                 ))
             ) : (
-                <div className="text-center py-20 bg-zinc-900/30 rounded-xl border border-zinc-800 border-dashed">
-                    <h3 className="text-zinc-300 font-medium mb-2">All Quiet on the Western Front</h3>
-                    <p className="text-zinc-500 max-w-md mx-auto mb-6">
+                <div className="text-center py-20 bg-muted/30 rounded-xl border border-border border-dashed">
+                    <h3 className="text-foreground font-medium mb-2">All Quiet on the Western Front</h3>
+                    <p className="text-muted-foreground max-w-md mx-auto mb-6">
                         No threats found matching your tech stack and threshold ({alertThreshold}+).
                     </p>
-                    <Button variant="outline" className="border-zinc-700">
+                    <Button variant="outline" className="border-border text-muted-foreground hover:text-foreground">
                         Adjust Filters
                     </Button>
                 </div>
@@ -124,4 +124,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

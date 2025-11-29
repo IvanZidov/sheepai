@@ -4,34 +4,33 @@
 
 @layer base {
   :root {
-    /* Base Colors */
-    --background: 240 10% 3.9%; /* Zinc 950 */
-    --foreground: 0 0% 98%; /* Zinc 50 */
+    /* Light Mode Defaults */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
 
-    --card: 215 32% 17%; /* Slate 800 */
-    --card-foreground: 0 0% 98%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
 
-    --popover: 215 32% 17%; /* Slate 800 */
-    --popover-foreground: 0 0% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
 
-    /* Brand Colors */
-    --primary: 160 84% 39%; /* Shepherd Green #10b981 */
-    --primary-foreground: 144 65% 95%;
+    --primary: 160 84% 39%;
+    --primary-foreground: 355.7 100% 97.3%;
 
-    --secondary: 217 91% 60%; /* Blue #3b82f6 (Info) */
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 217 91% 60%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
 
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
 
-    --destructive: 0 84% 60%; /* Wolf Red #ef4444 */
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
     --ring: 160 84% 39%;
 
     --radius: 0.5rem;
@@ -42,27 +41,35 @@
     --network-dark: 164 86% 16%;
     --charcoal: 217 19% 27%;
     
-    --warning: 45 93% 50%; /* Amber #f59e0b */
-    --safe: 160 84% 39%; /* Emerald #10b981 */
+    --warning: 45 93% 50%;
+    --safe: 160 84% 39%;
   }
 
   .dark {
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
+
     --card: 215 32% 17%;
     --card-foreground: 0 0% 98%;
+
     --popover: 215 32% 17%;
     --popover-foreground: 0 0% 98%;
+
     --primary: 160 84% 39%;
     --primary-foreground: 144 65% 95%;
+
     --secondary: 217 91% 60%;
     --secondary-foreground: 210 40% 98%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+
     --muted: 240 3.7% 15.9%;
     --muted-foreground: 240 5% 64.9%;
+
     --accent: 240 3.7% 15.9%;
     --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
     --ring: 160 84% 39%;

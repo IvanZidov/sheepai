@@ -42,7 +42,7 @@ export default function LandingPage() {
   });
 
   return (
-    <div className="min-h-screen bg-zinc-950 font-sans selection:bg-emerald-500/20 selection:text-emerald-500">
+    <div className="min-h-screen bg-background font-sans selection:bg-emerald-500/20 selection:text-emerald-500">
       <ShepherdNav />
       
       <main>
@@ -50,21 +50,21 @@ export default function LandingPage() {
         <FeatureCards />
 
         {/* Public Feed Section */}
-        <section id="feed" className="py-24 bg-zinc-950 relative">
+        <section id="feed" className="py-24 bg-background relative">
           <div className="container mx-auto px-4 max-w-5xl">
             
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
               <div>
-                <h2 className="text-3xl font-bold text-white mb-2 font-heading">Latest Intelligence</h2>
-                <p className="text-zinc-400">Real-time threats monitored by CyberShepherd.</p>
+                <h2 className="text-3xl font-bold text-foreground mb-2 font-heading">Latest Intelligence</h2>
+                <p className="text-muted-foreground">Real-time threats monitored by CyberShepherd.</p>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input 
                     placeholder="Search threats..." 
-                    className="pl-10 bg-zinc-900 border-zinc-800 w-full sm:w-64"
+                    className="pl-10 bg-muted border-border w-full sm:w-64"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -84,7 +84,7 @@ export default function LandingPage() {
                     className={`text-xs font-mono uppercase tracking-wider ${
                       activeFilter === f 
                         ? "bg-emerald-600 hover:bg-emerald-500 text-white border-transparent" 
-                        : "border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-900"
+                        : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
                     }`}
                  >
                     {f === "CRITICAL" && <span className="w-1.5 h-1.5 rounded-full bg-red-500 mr-2 animate-pulse" />}
@@ -97,7 +97,7 @@ export default function LandingPage() {
             <div className="space-y-6">
                 {loading ? (
                     Array.from({length: 3}).map((_, i) => (
-                        <div key={i} className="h-64 rounded-xl bg-zinc-900/50 border border-zinc-800 animate-pulse" />
+                        <div key={i} className="h-64 rounded-xl bg-muted/50 border border-border animate-pulse" />
                     ))
                 ) : filteredArticles.length > 0 ? (
                     filteredArticles.map((article, index) => (
@@ -108,8 +108,8 @@ export default function LandingPage() {
                         </div>
                     ))
                 ) : (
-                    <div className="text-center py-20 bg-zinc-900/30 rounded-xl border border-zinc-800 border-dashed">
-                        <div className="text-zinc-500 mb-2">No threats found matching your criteria.</div>
+                    <div className="text-center py-20 bg-muted/30 rounded-xl border border-border border-dashed">
+                        <div className="text-muted-foreground mb-2">No threats found matching your criteria.</div>
                         <Button variant="link" onClick={() => {setActiveFilter("All"); setSearchQuery("");}} className="text-emerald-500">
                           Clear filters
                         </Button>
@@ -118,7 +118,7 @@ export default function LandingPage() {
             </div>
             
             <div className="mt-12 text-center">
-               <Button variant="outline" size="lg" className="h-12 px-8 border-zinc-800 hover:bg-zinc-900 text-zinc-400">
+               <Button variant="outline" size="lg" className="h-12 px-8 border-border hover:bg-muted text-muted-foreground">
                   Load More Articles
                </Button>
             </div>
@@ -128,8 +128,8 @@ export default function LandingPage() {
       </main>
 
       {/* Simple Footer */}
-      <footer className="border-t border-zinc-900 py-12 bg-zinc-950">
-         <div className="container mx-auto px-4 text-center text-zinc-500 text-sm">
+      <footer className="border-t border-border py-12 bg-background">
+         <div className="container mx-auto px-4 text-center text-muted-foreground text-sm">
             <p>© 2025 CyberShepherd. Silence the noise.</p>
          </div>
       </footer>
