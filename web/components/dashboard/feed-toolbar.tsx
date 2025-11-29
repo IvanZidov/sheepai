@@ -10,7 +10,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel 
 } from "@/components/ui/dropdown-menu";
-import { CreateSubscriptionDialog } from "@/components/dashboard/create-subscription-dialog";
 import { useUserPreferences, SortOption } from "@/lib/user-preferences";
 import { Search, ArrowUpDown, Calendar, Zap, Star, Sparkles, X } from "lucide-react";
 
@@ -56,10 +55,7 @@ export function FeedToolbar() {
         )}
       </div>
       
-      <div className="flex items-center gap-2">
-        <CreateSubscriptionDialog />
-        
-        <DropdownMenu>
+      <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" className="shrink-0 gap-2 border-dashed border-border bg-card/50">
             <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
@@ -84,7 +80,6 @@ export function FeedToolbar() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      </div>
     </div>
   );
 }

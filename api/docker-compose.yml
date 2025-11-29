@@ -16,9 +16,6 @@ services:
       # OpenAI
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
-      # Email (Brevo)
-      - BREVO_API_KEY=${BREVO_API_KEY}
-      - EMAIL_FROM_ADDRESS=${EMAIL_FROM_ADDRESS:-ivan@textvalue.ai}
       # API Config
       - SCRAPE_INTERVAL_HOURS=${SCRAPE_INTERVAL_HOURS:-1}
       - MAX_CONCURRENT=${MAX_CONCURRENT:-5}
