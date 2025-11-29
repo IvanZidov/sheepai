@@ -2,15 +2,23 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Settings, User } from "lucide-react";
+import { Bell, Settings, User, LogOut } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useAuth } from "@/contexts/auth-context";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function ShepherdNav() {
   const pathname = usePathname();
+  const { user, signOut, isLoading } = useAuth();
   const isDashboard = pathname.startsWith("/dashboard") || pathname.startsWith("/article");
+
+  // Get user initials or icon
+  const userInitials = user?.email?.substring(0, 2).toUpperCase() || "U";
+  const userImage = user?.user_metadata?.avatar_url;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -37,23 +45,51 @@ export function ShepherdNav() {
           </div>
           
           <nav className="flex items-center gap-4">
-             {isDashboard ? (
+             {user ? (
                  <>
                     <Link href="/dashboard">
-                        <Button variant="ghost" size="sm" className="text-sm font-medium hidden sm:inline-flex hover:text-primary hover:bg-primary/10 transition-colors">
+                        <Button variant={isDashboard ? "secondary" : "ghost"} size="sm" className="text-sm font-medium hidden sm:inline-flex transition-colors">
                             Dashboard
                         </Button>
                     </Link>
                     <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
                         <Bell className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
-                        <Settings className="w-4 h-4" />
-                    </Button>
                     <ThemeToggle />
-                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-brand-green/20 to-brand-teal/20 border border-border ml-2 flex items-center justify-center text-brand-green cursor-pointer hover:bg-brand-green/20 transition-colors">
-                        <User className="w-4 h-4" />
-                    </div>
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-brand-green/20 to-brand-teal/20 border border-border ml-2 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity overflow-hidden">
+                            {userImage ? (
+                               <img src={userImage} alt="User" className="w-full h-full object-cover" />
+                            ) : (
+                               <span className="text-xs font-medium text-brand-green">{userInitials}</span>
+                            )}
+                        </div>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuLabel className="font-normal">
+                          <div className="flex flex-col space-y-1">
+                            <p className="text-sm font-medium leading-none">{user.user_metadata?.full_name || 'User'}</p>
+                            <p className="text-xs leading-none text-muted-foreground">
+                              {user.email}
+                            </p>
+                          </div>
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                            <Link href="/dashboard/settings" className="cursor-pointer">
+                                <Settings className="mr-2 h-4 w-4" />
+                                <span>Settings</span>
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={signOut} className="text-red-600 cursor-pointer focus:text-red-600 focus:bg-red-100/10">
+                          <LogOut className="mr-2 h-4 w-4" />
+                          <span>Log out</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                  </>
              ) : (
                  <>
@@ -64,11 +100,13 @@ export function ShepherdNav() {
                         Pricing
                     </Link>
                     <ThemeToggle />
-                    <Link href="/dashboard">
-                        <Button variant="default" size="sm" className="ml-2">
-                            Login
-                        </Button>
-                    </Link>
+                    {!isLoading && (
+                        <Link href="/login">
+                            <Button variant="default" size="sm" className="ml-2">
+                                Login
+                            </Button>
+                        </Link>
+                    )}
                  </>
              )}
           </nav>
