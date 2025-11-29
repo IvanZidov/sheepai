@@ -21,8 +21,8 @@ export default function LandingPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    fetchArticles().then((data) => {
-      setArticles(data);
+    fetchArticles().then((result) => {
+      setArticles(result.data);
       setLoading(false);
     });
   }, []);
