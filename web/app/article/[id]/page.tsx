@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useState, useCallback } from "react";
 import { ShepherdNav } from "@/components/layout/shepherd-nav";
 import { ShepherdChat } from "@/components/chat/shepherd-chat";
 import { fetchArticleById } from "@/lib/articles";
@@ -8,11 +8,21 @@ import { Article, Priority } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
   ArrowLeft,
   Calendar,
   ExternalLink,
   MessageSquare,
-  Share2,
   ShieldCheck,
   Clock,
   Zap,
@@ -20,6 +30,11 @@ import {
   AlertTriangle,
   TrendingUp,
   Megaphone,
+  Mail,
+  Copy,
+  Check,
+  Loader2,
+  LogIn,
 } from "lucide-react";
 import Link from "next/link";
 import { ActionItems } from "@/components/article/action-items";
@@ -29,6 +44,24 @@ import { KeyTakeaways } from "@/components/article/key-takeaways";
 import { ScoreGauge } from "@/components/article/score-gauge";
 import { MetaTags } from "@/components/article/meta-tags";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/auth-context";
+import {
+  shareViaEmail,
+  shareViaSlack,
+  copyArticleLink,
+} from "@/lib/share";
+
+// Slack icon component
+const SlackIcon = ({ className }: { className?: string }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zm1.271 0a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zm0 1.271a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zm10.124 2.521a2.528 2.528 0 0 1 2.52-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.52V8.834zm-1.271 0a2.528 2.528 0 0 1-2.521 2.521 2.528 2.528 0 0 1-2.521-2.521V2.522A2.528 2.528 0 0 1 15.166 0a2.528 2.528 0 0 1 2.521 2.522v6.312zm-2.521 10.124a2.528 2.528 0 0 1 2.521 2.52A2.528 2.528 0 0 1 15.166 24a2.528 2.528 0 0 1-2.521-2.522v-2.52h2.521zm0-1.271a2.528 2.528 0 0 1-2.521-2.521 2.528 2.528 0 0 1 2.521-2.521h6.312A2.528 2.528 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.521h-6.312z" />
+  </svg>
+);
 
 export default function ArticlePage({
   params,
@@ -36,8 +69,18 @@ export default function ArticlePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const { user, slackStatus } = useAuth();
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Share states
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [emailRecipient, setEmailRecipient] = useState("");
+  const [personalMessage, setPersonalMessage] = useState("");
+  const [shareLoading, setShareLoading] = useState<"email" | "slack" | "copy" | null>(null);
+  const [shareSuccess, setShareSuccess] = useState<string | null>(null);
+  const [shareError, setShareError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetchArticleById(id).then((data) => {
@@ -45,6 +88,90 @@ export default function ArticlePage({
       setLoading(false);
     });
   }, [id]);
+
+  // Reset email dialog state when closed
+  useEffect(() => {
+    if (!emailDialogOpen) {
+      setTimeout(() => {
+        setEmailRecipient("");
+        setPersonalMessage("");
+        setShareError(null);
+        setShareSuccess(null);
+      }, 200);
+    }
+  }, [emailDialogOpen]);
+
+  const handleCopyLink = useCallback(async () => {
+    setShareLoading("copy");
+    const success = await copyArticleLink(id);
+    setShareLoading(null);
+    
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }, [id]);
+
+  const handleShareEmail = useCallback(async () => {
+    if (!emailRecipient.trim()) {
+      setShareError("Please enter an email address");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailRecipient.trim())) {
+      setShareError("Please enter a valid email address");
+      return;
+    }
+
+    setShareLoading("email");
+    setShareError(null);
+
+    try {
+      const result = await shareViaEmail({
+        article_id: id,
+        recipient_emails: [emailRecipient.trim()],
+        personal_message: personalMessage.trim() || undefined,
+      });
+
+      setShareSuccess(result.message);
+      setTimeout(() => {
+        setEmailDialogOpen(false);
+        setShareSuccess(null);
+      }, 2000);
+    } catch (error) {
+      setShareError(
+        error instanceof Error ? error.message : "Failed to send email"
+      );
+    } finally {
+      setShareLoading(null);
+    }
+  }, [id, emailRecipient, personalMessage]);
+
+  const handleShareSlack = useCallback(async () => {
+    if (!user) return;
+    
+    setShareLoading("slack");
+    setShareError(null);
+
+    try {
+      await shareViaSlack({
+        article_id: id,
+      });
+      // Brief visual feedback
+      setShareSuccess("Sent to Slack!");
+      setTimeout(() => setShareSuccess(null), 2000);
+    } catch (error) {
+      setShareError(
+        error instanceof Error ? error.message : "Failed to send to Slack"
+      );
+      setTimeout(() => setShareError(null), 3000);
+    } finally {
+      setShareLoading(null);
+    }
+  }, [id, user]);
+
+  const canShareSlack = user && slackStatus.connected && slackStatus.channelId;
 
   if (loading)
     return (
@@ -126,7 +253,6 @@ export default function ArticlePage({
         >
           {/* Top badges row */}
           <div className="flex flex-wrap gap-3 mb-6">
-            {/* Breaking News Badge */}
             {article.is_breaking_news && (
               <Badge
                 variant="outline"
@@ -137,7 +263,6 @@ export default function ArticlePage({
               </Badge>
             )}
 
-            {/* Sponsored Badge */}
             {article.is_sponsored && (
               <Badge
                 variant="outline"
@@ -148,17 +273,14 @@ export default function ArticlePage({
               </Badge>
             )}
 
-            {/* Priority Badge */}
             <Badge variant="outline" className={cn("uppercase tracking-wider font-mono", config.badge)}>
               {article.priority}
             </Badge>
 
-            {/* Content Type */}
             <Badge variant="secondary" className="bg-muted text-muted-foreground capitalize">
               {article.content_type?.replace("_", " ")}
             </Badge>
 
-            {/* Categories */}
             {article.categories.slice(0, 3).map((cat) => (
               <Badge
                 key={cat}
@@ -223,7 +345,7 @@ export default function ArticlePage({
                 Executive Summary
               </h3>
               <p className="text-lg text-foreground leading-relaxed italic">
-                "{article.tldr}"
+                &quot;{article.tldr}&quot;
               </p>
             </section>
 
@@ -282,35 +404,186 @@ export default function ArticlePage({
               <h3 className="text-lg font-semibold text-foreground font-heading">
                 Actions
               </h3>
-              <Button className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">
-                <Share2 className="w-4 h-4" />
-                Share Report
-              </Button>
+              
+              {/* Share Report - Copy Link */}
               <Button
                 variant="outline"
                 className="w-full gap-2 border-border hover:bg-muted"
-                asChild
+                onClick={handleCopyLink}
+                disabled={shareLoading === "copy"}
               >
-                <a
-                  href={article.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  Original Source
-                </a>
+                {shareLoading === "copy" ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : copied ? (
+                  <Check className="w-4 h-4 text-emerald-500" />
+                ) : (
+                  <Copy className="w-4 h-4" />
+                )}
+                {copied ? "Copied!" : "Copy Link"}
               </Button>
+
+              {/* Share via Email */}
               <Button
-                variant="ghost"
-                className="w-full gap-2 text-muted-foreground hover:text-foreground"
+                className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
+                onClick={() => setEmailDialogOpen(true)}
               >
-                <MessageSquare className="w-4 h-4" />
-                Discussion
+                <Mail className="w-4 h-4" />
+                Share via Email
               </Button>
+
+              {/* Share to Slack */}
+              {user ? (
+                canShareSlack ? (
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2 border-border hover:bg-muted"
+                    onClick={handleShareSlack}
+                    disabled={shareLoading === "slack"}
+                  >
+                    {shareLoading === "slack" ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <SlackIcon className="w-4 h-4" />
+                    )}
+                    {shareLoading === "slack" 
+                      ? "Sending..." 
+                      : shareSuccess === "Sent to Slack!"
+                        ? "Sent to Slack!"
+                        : `Send to #${slackStatus.channelName}`}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2 border-border text-muted-foreground"
+                    asChild
+                  >
+                    <Link href="/dashboard/settings">
+                      <SlackIcon className="w-4 h-4" />
+                      Connect Slack in Settings
+                    </Link>
+                  </Button>
+                )
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-full gap-2 border-border text-muted-foreground"
+                  asChild
+                >
+                  <Link href="/login">
+                    <LogIn className="w-4 h-4" />
+                    Sign in to Share via Slack
+                  </Link>
+                </Button>
+              )}
+
+              {/* Error message */}
+              {shareError && (
+                <p className="text-sm text-destructive text-center">{shareError}</p>
+              )}
+
+              <div className="border-t border-border pt-4 space-y-4">
+                <Button
+                  variant="outline"
+                  className="w-full gap-2 border-border hover:bg-muted"
+                  asChild
+                >
+                  <a
+                    href={article.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Original Source
+                  </a>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full gap-2 text-muted-foreground hover:text-foreground"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Discussion
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       </main>
+
+      {/* Email Dialog */}
+      <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="w-5 h-5 text-primary" />
+              Share via Email
+            </DialogTitle>
+            <DialogDescription>
+              Send this security report to a colleague via email.
+            </DialogDescription>
+          </DialogHeader>
+
+          {shareSuccess ? (
+            <div className="flex flex-col items-center justify-center py-8 gap-4">
+              <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                <Check className="w-6 h-6 text-emerald-500" />
+              </div>
+              <p className="text-center text-foreground font-medium">
+                {shareSuccess}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Recipient Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="colleague@company.com"
+                  value={emailRecipient}
+                  onChange={(e) => setEmailRecipient(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="message">Personal Message (optional)</Label>
+                <Textarea
+                  id="message"
+                  placeholder="Check out this security report..."
+                  value={personalMessage}
+                  onChange={(e) => setPersonalMessage(e.target.value)}
+                  rows={3}
+                />
+              </div>
+
+              {shareError && (
+                <p className="text-sm text-destructive">{shareError}</p>
+              )}
+
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button
+                  variant="ghost"
+                  onClick={() => setEmailDialogOpen(false)}
+                  disabled={shareLoading === "email"}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleShareEmail} disabled={shareLoading === "email"}>
+                  {shareLoading === "email" ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="w-4 h-4 mr-2" />
+                      Send Email
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <ShepherdChat />
     </div>
