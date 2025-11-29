@@ -1,0 +1,13 @@
+requests
+bs4
+openai
+pydantic
+langchain
+langchain-openai
+supabase
+streamlit
+python-dotenv
+fastapi
+uvicorn[standard]
+apscheduler
+elevenlabs
