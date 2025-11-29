@@ -496,13 +496,6 @@ export default function ArticlePage({
                     Original Source
                   </a>
                 </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full gap-2 text-muted-foreground hover:text-foreground"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  Discussion
-                </Button>
               </div>
             </div>
           </div>
