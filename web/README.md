@@ -1,36 +1,145 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SheepAI Web Frontend
+
+AI-powered news aggregation and personalization platform built with Next.js 14.
+
+## Features
+
+- 🔍 **Semantic Search** - AI-powered search using embeddings for better results
+- 🏷️ **Smart Filtering** - Filter by categories, regions, technologies, and priority
+- 🏢 **Company Profiling** - Analyze your company to get personalized filter suggestions
+- 📱 **Responsive Design** - Works on desktop and mobile
+- 🌙 **Dark Mode** - Built-in theme support
+- 🔐 **Authentication** - Supabase Auth with Google/Email login
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- npm/yarn/pnpm
+- Supabase project with:
+  - `article_analyses` table with embeddings
+  - `semantic-search` Edge Function deployed
+- FastAPI backend running (for company profile analysis)
+
+### Environment Variables
+
+Create a `.env.local` file:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+
+# FastAPI Backend URL (for company profile analysis)
+NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Installation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open [http://localhost:3000](http://localhost:3000) with your browser.
 
-## Learn More
+## Architecture
 
-To learn more about Next.js, take a look at the following resources:
+### Data Flow
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   Next.js Web   │────▶│    Supabase     │────▶│  Edge Functions │
+│   (Frontend)    │     │   (Database)    │     │ (Semantic Search│
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+         │
+         │ Company Profile
+         ▼
+┌─────────────────┐
+│  FastAPI API    │
+│ (Filter Suggest)│
+└─────────────────┘
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Key Files
 
-## Deploy on Vercel
+| File | Description |
+|------|-------------|
+| `lib/articles.ts` | Article fetching, semantic search, pagination |
+| `lib/api.ts` | FastAPI backend calls for company profile |
+| `lib/user-preferences.ts` | Zustand store for filters and preferences |
+| `lib/supabase/client.ts` | Supabase client initialization |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Components
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Component | Description |
+|-----------|-------------|
+| `dashboard/page.tsx` | Main feed with filters and search |
+| `dashboard/settings/page.tsx` | Company profile onboarding |
+| `feed/threat-card.tsx` | Article card component |
+| `dashboard/category-filter.tsx` | Category filter component |
+| `dashboard/region-filter.tsx` | Region filter component |
+| `dashboard/technology-filter.tsx` | Technology filter component |
+
+## Features in Detail
+
+### Semantic Search
+
+When you type in the search bar, the app:
+1. Waits 400ms for debounce
+2. Sends query to `semantic-search` Supabase Edge Function
+3. Edge Function computes embedding and searches with pgvector
+4. Returns articles sorted by semantic similarity
+
+### Company Profile Onboarding
+
+1. Go to Settings → Smart Feed Personalization
+2. Enter your company URL and description
+3. AI analyzes your company and suggests filters
+4. Apply suggested filters to your feed
+
+### Filtering
+
+- **Categories**: Security, AI/ML, Cloud, etc.
+- **Regions**: Geographic regions with flags
+- **Technologies**: Tech stack (Python, AWS, etc.)
+- **Priority**: Critical, High, Medium, Low, Info
+- **Date Range**: 24h, 7d, 30d, All time
+
+## Development
+
+```bash
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+
+# Lint code
+npm run lint
+```
+
+## Deployment
+
+Deploy to Vercel:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
+
+Or use the Vercel CLI:
+
+```bash
+vercel
+```
+
+## Tech Stack
+
+- **Framework**: Next.js 14 (App Router)
+- **Styling**: Tailwind CSS + shadcn/ui
+- **State**: Zustand
+- **Database**: Supabase (PostgreSQL + pgvector)
+- **Auth**: Supabase Auth
+- **Search**: OpenAI Embeddings + pgvector
