@@ -7,12 +7,11 @@ import { ShepherdChat } from "@/components/chat/shepherd-chat";
 import { HeroSection } from "@/components/landing/hero-section";
 import { FeatureCards } from "@/components/landing/feature-cards";
 import { NewsletterInline } from "@/components/landing/newsletter-inline";
-import { fetchArticles, verifyArticle } from "@/lib/articles";
+import { fetchArticles } from "@/lib/articles";
 import { Article } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, SlidersHorizontal } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Search } from "lucide-react";
 
 export default function LandingPage() {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -26,13 +25,6 @@ export default function LandingPage() {
       setLoading(false);
     });
   }, []);
-
-  const onVerify = async (id: string) => {
-    const updated = await verifyArticle(id);
-    if (updated) {
-      setArticles(prev => prev.map(a => a.id === id ? updated : a));
-    }
-  };
 
   const filteredArticles = articles.filter(article => {
     const matchesPriority = activeFilter === "All" || article.priority === activeFilter;
@@ -102,7 +94,7 @@ export default function LandingPage() {
                 ) : filteredArticles.length > 0 ? (
                     filteredArticles.map((article, index) => (
                         <div key={article.id}>
-                           <ThreatCard article={article} onVerify={onVerify} />
+                           <ThreatCard article={article} />
                            {/* Inline Newsletter every 2 items */}
                            {index === 1 && <div className="my-8"><NewsletterInline /></div>}
                         </div>
