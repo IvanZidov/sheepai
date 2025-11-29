@@ -3,10 +3,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Article, Priority } from "@/lib/types";
 import { TrustBadge } from "./trust-badge";
-import { MessageSquare, Share2, Sparkles, ChevronRight, Megaphone } from "lucide-react";
+import { MessageSquare, Share2, Sparkles, ChevronRight, Megaphone, ShieldAlert, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { ThreatMeter } from "./threat-meter";
 import Link from "next/link";
 
 interface ThreatCardProps {
@@ -17,36 +16,36 @@ interface ThreatCardProps {
 export function ThreatCard({ article, onVerify }: ThreatCardProps) {
   const [isVerifying, setIsVerifying] = useState(false);
 
-  const priorityConfig: Record<Priority, { border: string, shadow: string, badge: string, text: string }> = {
+  const priorityConfig: Record<Priority, { border: string, bg: string, text: string, icon: React.ReactNode }> = {
     CRITICAL: { 
-        border: "border-l-destructive", 
-        shadow: "group-hover:shadow-[0_0_20px_rgba(239,68,68,0.2)]",
-        badge: "bg-destructive/10 text-destructive",
-        text: "text-destructive"
+        border: "border-red-500", 
+        bg: "bg-red-500/10",
+        text: "text-red-500",
+        icon: <ShieldAlert className="w-3 h-3" />
     },
     HIGH: { 
-        border: "border-l-warning", 
-        shadow: "group-hover:shadow-[0_0_20px_rgba(245,158,11,0.2)]",
-        badge: "bg-warning/10 text-warning",
-        text: "text-warning"
+        border: "border-orange-500", 
+        bg: "bg-orange-500/10",
+        text: "text-orange-500",
+        icon: <ShieldAlert className="w-3 h-3" />
     },
     MEDIUM: { 
-        border: "border-l-warning", 
-        shadow: "group-hover:shadow-[0_0_20px_rgba(245,158,11,0.2)]",
-        badge: "bg-warning/10 text-warning",
-        text: "text-warning"
+        border: "border-yellow-500", 
+        bg: "bg-yellow-500/10",
+        text: "text-yellow-500",
+        icon: <ShieldAlert className="w-3 h-3" />
     },
     LOW: { 
-        border: "border-l-safe", 
-        shadow: "group-hover:shadow-[0_0_20px_rgba(16,185,129,0.2)]",
-        badge: "bg-safe/10 text-safe",
-        text: "text-safe"
+        border: "border-emerald-500", 
+        bg: "bg-emerald-500/10",
+        text: "text-emerald-500",
+        icon: <ShieldAlert className="w-3 h-3" />
     },
     INFO: {
-        border: "border-l-secondary",
-        shadow: "group-hover:shadow-[0_0_20px_rgba(59,130,246,0.2)]",
-        badge: "bg-secondary/10 text-secondary",
-        text: "text-secondary"
+        border: "border-blue-500",
+        bg: "bg-blue-500/10",
+        text: "text-blue-500",
+        icon: <ShieldAlert className="w-3 h-3" />
     }
   };
 
@@ -54,127 +53,126 @@ export function ThreatCard({ article, onVerify }: ThreatCardProps) {
 
   const handleVerify = async (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsVerifying(true);
     await onVerify(article.id);
     setIsVerifying(false);
   };
 
-  // Calculate gauge score (1-10 -> 10-100)
-  const gaugeScore = article.relevance_score * 10;
-
   return (
     <Link href={`/article/${article.id}`}>
-      <Card className={cn(
-          "bg-card border-y border-r border-border border-l-4 backdrop-blur-sm transition-all duration-300 ease-out overflow-hidden relative group hover:-translate-y-[2px] cursor-pointer",
-          config.border,
-          config.shadow
-      )}>
-        {/* Shimmer Overlay when Verifying */}
-        {isVerifying && (
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent -skew-x-12 animate-shimmer z-10 pointer-events-none" />
-        )}
+      <Card className="group relative overflow-hidden border border-border bg-card transition-all hover:shadow-md hover:border-primary/50">
+        
+        {/* Priority Stripe */}
+        <div className={cn("absolute left-0 top-0 bottom-0 w-1", config.border.replace("border-", "bg-"))} />
 
-        <CardHeader className="pb-3 space-y-2.5 relative z-20">
+        <CardHeader className="pb-3 pl-5">
           <div className="flex justify-between items-start gap-4">
-              <div className="space-y-1 flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    {article.is_sponsored && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-sm font-mono uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                        <Megaphone className="w-3 h-3" />
-                        Sponsored
-                      </span>
-                    )}
-                    <span className={cn(
-                        "text-[10px] font-bold px-1.5 py-0.5 rounded-sm font-mono uppercase tracking-wider", 
-                        config.badge
-                    )}>
-                      {article.priority}
-                    </span>
-                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-mono">
-                      {article.source} • {new Date(article.publishedAt).toLocaleDateString()}
-                    </span>
-                    <TrustBadge status={article.verificationStatus} note={article.verificationNote} />
-                  </div>
-                  <h3 className="font-heading font-semibold text-lg leading-snug group-hover:text-primary transition-colors flex items-center gap-2">
-                      {article.headline}
-                      <ChevronRight className="w-4 h-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-primary" />
-                  </h3>
+            <div className="space-y-2 flex-1">
+              {/* Meta Row */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 border-0 font-mono uppercase tracking-wider gap-1", config.bg, config.text)}>
+                  {config.icon}
+                  {article.priority}
+                </Badge>
+
+                {article.regions?.map((r, i) => (
+                   <span key={i} title={r.region} className="text-sm cursor-help grayscale hover:grayscale-0 transition-all">{r.flag}</span>
+                ))}
+
+                <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider">
+                  {article.source} • {new Date(article.publishedAt).toLocaleDateString()}
+                </span>
+
+                {article.is_sponsored && (
+                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-0">Sponsored</Badge>
+                )}
               </div>
+
+              <h3 className="font-heading font-semibold text-lg leading-snug group-hover:text-primary transition-colors">
+                {article.headline}
+              </h3>
+            </div>
+
+            {/* Relevance Score Circle */}
+            <div className="shrink-0 flex flex-col items-center">
+               <div className={cn(
+                 "flex items-center justify-center w-10 h-10 rounded-full border-2 font-bold text-xs",
+                 article.relevance_score >= 8 ? "border-emerald-500 text-emerald-500" : 
+                 article.relevance_score >= 5 ? "border-yellow-500 text-yellow-500" : "border-muted text-muted-foreground"
+               )}>
+                 {article.relevance_score}
+               </div>
+               <span className="text-[9px] text-muted-foreground uppercase mt-1 font-mono">Score</span>
+            </div>
           </div>
         </CardHeader>
 
-        <CardContent className="pb-4 flex flex-col sm:flex-row gap-4 relative z-20">
-          <div className="flex-1 space-y-3">
-              {/* Short Summary */}
-              <p className="text-sm text-muted-foreground border-l-2 border-border pl-3 py-1">
-                  {article.short_summary}
-              </p>
+        <CardContent className="pb-3 pl-5">
+          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+            {article.short_summary}
+          </p>
 
-              {/* Key Takeaways */}
-              <ul className="space-y-1.5">
-                  {article.key_takeaways.map((item, i) => (
-                      <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                          <span className={cn("block w-1 h-1 mt-1.5 rounded-full shrink-0", item.highlight ? "bg-primary" : "bg-muted-foreground/50")} />
-                          <span className={cn(item.highlight && "text-foreground font-medium")}>{item.point}</span>
-                      </li>
-                  ))}
-              </ul>
-          </div>
-          {/* Gauge positioned to the right of content */}
-          <div className="shrink-0 hidden sm:flex flex-col items-center justify-center bg-muted/30 rounded-lg p-2 border border-border/50">
-              <span className="text-[10px] font-mono text-muted-foreground uppercase mb-1">Relevance</span>
-              <ThreatMeter score={gaugeScore} size="sm" />
+          {/* Compact Key Takeaways */}
+          <div className="space-y-1">
+            {article.key_takeaways.slice(0, 2).map((item, i) => (
+              <div key={i} className="flex items-start gap-2 text-xs text-muted-foreground/80">
+                <div className="mt-1.5 w-1 h-1 rounded-full bg-primary/50 shrink-0" />
+                <span className={item.highlight ? "text-foreground" : ""}>{item.point}</span>
+              </div>
+            ))}
           </div>
         </CardContent>
 
-        <CardFooter className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 pt-0 relative z-20">
-            <div className="flex gap-2 flex-wrap">
-              {article.categories.slice(0, 4).map(cat => (
+        <CardFooter className="pl-5 pt-0 pb-4 flex items-center justify-between">
+           <div className="flex gap-1.5 overflow-hidden mask-image-linear-to-r from-black to-transparent w-full mr-4">
+              {article.categories.slice(0, 3).map(cat => (
                   <Badge 
                       key={cat} 
-                      variant="outline" 
-                      className="text-[10px] px-2 py-0.5 h-5 font-mono text-muted-foreground border-border hover:border-primary hover:text-primary hover:bg-primary/5 transition-all cursor-pointer hover:scale-105 uppercase"
+                      variant="secondary" 
+                      className="text-[10px] px-2 h-5 font-mono text-muted-foreground bg-muted/50 hover:bg-muted whitespace-nowrap"
                   >
-                      #{cat.replace('_', '-')}
+                      {cat.replace(/_/g, ' ')}
                   </Badge>
               ))}
-              {article.categories.length > 4 && (
-                  <span className="text-[10px] text-muted-foreground font-mono self-center">+{article.categories.length - 4}</span>
-              )}
-            </div>
+           </div>
 
-            <div className="flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300" onClick={(e) => e.stopPropagation()}>
-                <Button 
+           <div className="flex gap-1 shrink-0">
+             <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 text-muted-foreground hover:text-primary"
+                onClick={(e) => {
+                    e.preventDefault(); 
+                    // Discuss logic
+                }}
+             >
+                <MessageSquare className="w-4 h-4" />
+             </Button>
+             <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 text-muted-foreground hover:text-primary"
+                 onClick={(e) => {
+                    e.preventDefault(); 
+                    // Share logic
+                }}
+             >
+                <Share2 className="w-4 h-4" />
+             </Button>
+             <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-primary"
-                >
-                    <MessageSquare className="w-3.5 h-3.5" />
-                    Discuss
-                </Button>
-
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-primary"
-                >
-                    <Share2 className="w-3.5 h-3.5" />
-                    Share
-                </Button>
-
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="h-8 gap-1.5 text-xs border-dashed border-border hover:border-primary/50 hover:bg-primary/5"
+                  className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-primary group/verify"
                   onClick={handleVerify}
                   disabled={isVerifying}
                 >
-                    <Sparkles className={cn("w-3 h-3", isVerifying && "animate-spin")} />
+                    <Sparkles className={cn("w-3.5 h-3.5 transition-all group-hover/verify:text-amber-400", isVerifying && "animate-spin")} />
                     <span className={cn(isVerifying && "animate-pulse")}>
-                      {isVerifying ? "Verifying..." : "Fact-Check"}
+                      {isVerifying ? "Checking..." : "Check"}
                     </span>
-                </Button>
-            </div>
+             </Button>
+           </div>
         </CardFooter>
       </Card>
     </Link>
