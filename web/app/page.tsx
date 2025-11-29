@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { ShepherdNav } from "@/components/layout/shepherd-nav";
 import { ThreatCard } from "@/components/feed/threat-card";
-import { ShepherdChat } from "@/components/chat/shepherd-chat";
+import { ChatSidebar } from "@/components/chat/chat-sidebar";
 import { HeroSection } from "@/components/landing/hero-section";
 import { NewsletterInline } from "@/components/landing/newsletter-inline";
 import { fetchArticles } from "@/lib/articles";
@@ -124,7 +124,7 @@ export default function LandingPage() {
          </div>
       </footer>
 
-      <ShepherdChat />
+      <ChatSidebar />
     </div>
   );
 }

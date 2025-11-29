@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState, useCallback } from "react";
 import { ShepherdNav } from "@/components/layout/shepherd-nav";
-import { ShepherdChat } from "@/components/chat/shepherd-chat";
+import { ChatSidebar } from "@/components/chat/chat-sidebar";
 import { fetchArticleById } from "@/lib/articles";
 import { Article, Priority } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
@@ -578,7 +578,7 @@ export default function ArticlePage({
         </DialogContent>
       </Dialog>
 
-      <ShepherdChat />
+      <ChatSidebar />
     </div>
   );
 }

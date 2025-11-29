@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { DashboardShell } from "@/components/layout/shell";
 import { ShepherdNav } from "@/components/layout/shepherd-nav";
 import { ThreatCard } from "@/components/feed/threat-card";
-import { ShepherdChat } from "@/components/chat/shepherd-chat";
+import { ChatSidebar } from "@/components/chat/chat-sidebar";
 import { FeedToolbar } from "@/components/dashboard/feed-toolbar";
 import { FilterGroups } from "@/components/dashboard/filter-groups";
 import { CategoryFilter } from "@/components/dashboard/category-filter";
@@ -351,7 +351,7 @@ export default function DashboardPage() {
           </div>
       </DashboardShell>
 
-      <ShepherdChat />
+      <ChatSidebar />
     </div>
   );
 }
