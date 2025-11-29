@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Article, Priority } from "@/lib/types";
 import { TrustBadge } from "./trust-badge";
-import { ExternalLink, MessageSquare, Share2, Sparkles, ChevronRight } from "lucide-react";
+import { MessageSquare, Share2, Sparkles, ChevronRight, Megaphone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { ThreatMeter } from "./threat-meter";
@@ -78,6 +78,12 @@ export function ThreatCard({ article, onVerify }: ThreatCardProps) {
           <div className="flex justify-between items-start gap-4">
               <div className="space-y-1 flex-1">
                   <div className="flex items-center gap-2 mb-2">
+                    {article.is_sponsored && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-sm font-mono uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                        <Megaphone className="w-3 h-3" />
+                        Sponsored
+                      </span>
+                    )}
                     <span className={cn(
                         "text-[10px] font-bold px-1.5 py-0.5 rounded-sm font-mono uppercase tracking-wider", 
                         config.badge
@@ -99,9 +105,9 @@ export function ThreatCard({ article, onVerify }: ThreatCardProps) {
 
         <CardContent className="pb-4 flex flex-col sm:flex-row gap-4 relative z-20">
           <div className="flex-1 space-y-3">
-              {/* TL;DR Section */}
-              <p className="text-sm text-muted-foreground italic border-l-2 border-border pl-3 py-1">
-                  "{article.tldr}"
+              {/* Short Summary */}
+              <p className="text-sm text-muted-foreground border-l-2 border-border pl-3 py-1">
+                  {article.short_summary}
               </p>
 
               {/* Key Takeaways */}

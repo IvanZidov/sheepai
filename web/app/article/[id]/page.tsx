@@ -19,11 +19,11 @@ import {
   BookOpen,
   AlertTriangle,
   TrendingUp,
+  Megaphone,
 } from "lucide-react";
 import Link from "next/link";
 import { ActionItems } from "@/components/article/action-items";
 import { AffectedEntities } from "@/components/article/affected-entities";
-import { AttackChain } from "@/components/article/attack-chain";
 import { TrustBadge } from "@/components/feed/trust-badge";
 import { KeyTakeaways } from "@/components/article/key-takeaways";
 import { ScoreGauge } from "@/components/article/score-gauge";
@@ -137,6 +137,17 @@ export default function ArticlePage({
               </Badge>
             )}
 
+            {/* Sponsored Badge */}
+            {article.is_sponsored && (
+              <Badge
+                variant="outline"
+                className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30"
+              >
+                <Megaphone className="w-3 h-3 mr-1" />
+                SPONSORED
+              </Badge>
+            )}
+
             {/* Priority Badge */}
             <Badge variant="outline" className={cn("uppercase tracking-wider font-mono", config.badge)}>
               {article.priority}
@@ -229,8 +240,6 @@ export default function ArticlePage({
               </p>
             </section>
 
-            <AttackChain />
-
             <ActionItems items={article.action_items} />
           </div>
 
@@ -296,7 +305,7 @@ export default function ArticlePage({
                 className="w-full gap-2 text-muted-foreground hover:text-foreground"
               >
                 <MessageSquare className="w-4 h-4" />
-                Discussion (12)
+                Discussion
               </Button>
             </div>
           </div>
