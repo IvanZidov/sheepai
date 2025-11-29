@@ -6,10 +6,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Settings, User, LogOut } from "lucide-react";
+import { Settings, LogOut } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/contexts/auth-context";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function ShepherdNav() {
   const pathname = usePathname();
@@ -52,9 +51,6 @@ export function ShepherdNav() {
                             Dashboard
                         </Button>
                     </Link>
-                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
-                        <Bell className="w-4 h-4" />
-                    </Button>
                     <ThemeToggle />
                     
                     <DropdownMenu>
