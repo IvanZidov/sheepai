@@ -4,10 +4,10 @@ CRUD operations for raw articles
 """
 
 from typing import Optional
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
 from ..database import get_supabase
-from ..models.schemas import Article, ScrapeResult
+from ..models.schemas import Article, ScrapeResult, StatsResponse
 from ..services.scraper import scrape_and_save
 
 router = APIRouter(prefix="/articles", tags=["articles"])
@@ -15,11 +15,17 @@ router = APIRouter(prefix="/articles", tags=["articles"])
 
 @router.get("", response_model=list[Article])
 async def get_articles(
-    limit: int = 50,
-    offset: int = 0,
-    tag: Optional[str] = None
+    limit: int = Query(default=50, ge=1, le=200, description="Number of articles to return", example=20),
+    offset: int = Query(default=0, ge=0, description="Number of articles to skip", example=0),
+    tag: Optional[str] = Query(default=None, description="Filter by tag (partial match)", example="Security")
 ):
-    """Get articles from database"""
+    """
+    Get articles from database.
+    
+    - **limit**: Maximum number of articles to return (1-200)
+    - **offset**: Number of articles to skip for pagination
+    - **tag**: Filter articles containing this tag (case-insensitive)
+    """
     try:
         supabase = get_supabase()
         query = supabase.table("news_articles").select("*").order("created_at", desc=True)
@@ -57,9 +63,13 @@ async def trigger_scrape():
     return ScrapeResult(**result)
 
 
-@router.get("/stats/summary")
+@router.get("/stats/summary", response_model=StatsResponse)
 async def get_stats():
-    """Get database statistics"""
+    """
+    Get database statistics.
+    
+    Returns counts of articles, analyses, and top tags.
+    """
     try:
         supabase = get_supabase()
         
