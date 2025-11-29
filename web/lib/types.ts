@@ -84,6 +84,7 @@ export interface Article extends ArticleAnalysis {
   publishedAt: string;
   
   // Fields for UI compatibility/augmentation
+  title?: string;
   verificationStatus: VerificationStatus;
   verificationNote?: string;
 }

@@ -25,7 +25,7 @@ export function AlertThreshold() {
         defaultValue={[alertThreshold]} 
         max={100} 
         step={1}
-        onValueChange={(vals) => setThreshold(vals[0])}
+        onValueChange={(vals: number[]) => setThreshold(vals[0])}
         className="py-2"
       />
       
