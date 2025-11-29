@@ -4,211 +4,380 @@
 
 **CyberShepherd is NOT a security tool. It's a *relevance* tool for cybersecurity professionals.**
 
-*   **Problem:** Security teams drown in 100+ daily articles. 95% are irrelevant to their stack.
-*   **Solution:** AI-powered filtering that understands YOUR company's tech stack and delivers only what matters.
-*   **Outcome:** A CISO using AWS + Python doesn't see WordPress exploits. They see the Python supply chain attack that could hit them Monday morning.
+* **Problem:** Security teams drown in 100+ daily articles. 95% are irrelevant to their stack.
+* **Solution:** AI-powered filtering that understands YOUR company's tech stack and delivers only what matters.
+* **Outcome:** A CISO using AWS + Python doesn't see WordPress exploits. They see the Python supply chain attack that could hit them Monday morning.
 
 ---
 
-## 🗺️ User Flow: The "Noise-to-Signal" Journey
+## 🌐 Deployment Architecture
 
-### 1. Landing Page (The "Hook")
+### Production URLs
+| Component | URL | Platform |
+|-----------|-----|----------|
+| **Web App** | https://www.cybershepherd.app/ | Vercel |
+| **API** | https://sheepai-api-production.up.railway.app | Railway |
+| **API Docs** | https://sheepai-api-production.up.railway.app/docs | Railway |
+| **Database** | Supabase (PostgreSQL) | Supabase |
+| **Edge Functions** | Supabase Edge Functions | Supabase |
 
-**Goal:** Convert a stressed security professional into a signed-up user in < 30 seconds.
-
-#### Above the Fold
-*   **Headline:** "Stop Reading. Start Knowing."
-*   **Subheadline:** "Cybersecurity news filtered for YOUR tech stack. AI-summarized. Fact-checked. Zero noise."
-*   **Visual:** Side-by-side comparison:
-    *   *Left (Before):* A chaotic wall of text (The Hacker News homepage).
-    *   *Right (After):* A clean CyberShepherd Card showing "Critical: Python Supply Chain Attack" with a red threat badge and "Verified ✓".
-*   **CTA Button:** "Get Relevant News →" (Emerald Green)
-
-#### Feature Section 1: "Your Stack. Your News."
-*   **Graphic:** A chat bubble: "We use AWS Lambda, Python, and PostgreSQL" → Feed instantly filters to show only relevant threats.
-*   **Copy:** "Tell us your infrastructure once. We filter 10,000 articles down to the 5 that matter to you."
-
-#### Feature Section 2: "Trust, But Verify"
-*   **Graphic:** The "Verify with Gemini" button animation → ✅ "Confirmed by CISA, NVD, BleepingComputer".
-*   **Copy:** "AI hallucinations are the new vulnerabilities. Every critical alert is fact-checked against live sources before it reaches your inbox."
-
-#### Feature Section 3: "Understand in Seconds"
-*   **Graphic:** A Mermaid.js attack chain diagram (Attacker → npm package → Your Lambda → Data Exfil).
-*   **Copy:** "Don't parse 3,000-word reports. See the attack vector visualized in 3 seconds."
-
-#### Social Proof Bar
-*   "Monitoring 50+ Cybersecurity Sources | 12,000 Articles Filtered Daily | Average Read Time: 2 min vs 45 min"
-
-#### Final CTA
-*   **Headline:** "Your competitors are still reading. You're already patched."
-*   **Button:** "Start Free — No Credit Card"
+### Tech Stack Overview
+| Layer | Technology |
+|-------|------------|
+| Frontend | Next.js 14 (App Router), React, TypeScript, Tailwind CSS, shadcn/ui |
+| Backend API | FastAPI (Python), LangChain, APScheduler |
+| Database | Supabase (PostgreSQL), pgvector |
+| AI/LLM | OpenAI GPT-4o-mini, text-embedding-3-small |
+| Email | Brevo (Sendinblue) Transactional API |
+| Slack | Slack OAuth 2.0, Slack SDK |
+| Web Scraping | BeautifulSoup4, Requests |
+| Deployment | Vercel (Frontend), Railway (API), Supabase (DB + Edge) |
 
 ---
 
-### 2. Onboarding (The "Shepherd's Handshake")
+## 🗺️ User Flow
 
-*   **Entry:** User clicks CTA → Auth (Google/GitHub SSO via Supabase).
-*   **Interactive Setup (Chat Interface):**
-    *   **AI:** "Welcome to CyberShepherd. To show you only what matters, tell me about your company."
-    *   **User:** "I'm a Security Engineer at a FinTech startup. We run on AWS (Lambda, RDS), use Python and Node.js, and handle PCI-DSS data."
-    *   **System Parses:**
-        *   `[Role: Security Engineer]`
-        *   `[Sector: FinTech]`
-        *   `[Cloud: AWS]`
-        *   `[Services: Lambda, RDS]`
-        *   `[Languages: Python, Node.js]`
-        *   `[Compliance: PCI-DSS]`
-    *   **AI:** "Got it. I'll prioritize: AWS vulnerabilities, Python/Node supply chain attacks, and PCI-DSS compliance updates. Sound good?"
-    *   **User:** "Yes" → Tags saved to `user_preferences`.
-*   **Result:** Redirect to personalized Dashboard.
+### 1. Landing Page (Public)
+
+**URL:** https://www.cybershepherd.app/
+
+The landing page showcases the latest security intelligence publicly:
+
+* **Hero Section:** Headline "Silence the Noise" with animated threat indicators
+* **Public Feed:** Real-time threat cards filtered by priority (CRITICAL, HIGH, MEDIUM, LOW, INFO)
+* **Search:** Full-text search across headlines and TL;DR summaries
+* **Newsletter Inline:** Embedded subscription prompt between articles
+* **Chat Widget:** Floating Shepherd Assistant button for AI queries
 
 ---
 
-### 3. The Dashboard (The "Watchtower")
+### 2. Authentication
 
-*   **Layout:** 3-column responsive design.
+**Provider:** Supabase Auth (Google/GitHub SSO)
 
-| Left Column (Sticky) | Center Column (Feed) | Right Column (Insights) |
-| :--- | :--- | :--- |
-| **My Filters** | **The News Stream** | **Threat Pulse** |
-| ☑️ AWS | Cards sorted by `relevance_score` | "Ransomware +40% this week" |
-| ☑️ Python | (threat_score × tag_match) | **Trending Tags** |
-| ☑️ Supply Chain | Red border = Critical | #SupplyChain #ZeroDay |
-| ☑️ PCI-DSS | Yellow = Warning | **Quick Stats** |
-| **Alert Threshold** | Green = Informational | "5 new relevant today" |
-| Slider: 70+ | | |
+* **Entry:** User clicks "Dashboard" or any authenticated feature
+* **Flow:** Redirects to `/login` → Supabase OAuth → Returns with session
+* **Session:** JWT stored in cookies, managed by Supabase client
 
 ---
 
-### 4. News Consumption (The "Wolf Spotting")
+### 3. Dashboard (Authenticated)
 
-*   **Trigger:** User sees a Red Border Card: "North Korean Hackers Deploy 197 npm Packages".
-*   **Card Anatomy:**
-    *   **Header:** Headline + Source + Time ("2 hours ago").
-    *   **Body:** 2-3 sentence executive summary (TL;DR).
-    *   **Key Takeaways:** Bullet points of critical info.
-    *   **Footer:**
-        *   `Badge`: "Supply Chain" (Red), "Node.js" (Blue).
-        *   `Threat Meter`: 92/100 (Visual gauge based on Relevance Score).
-        *   `Trust Status`: ⚠️ Unverified.
-*   **Interaction Flow:**
-    1.  **Glance:** User reads TL;DR in 10 seconds.
-    2.  **Verify:** Clicks "Fact-Check" → Gemini + Google Search Grounding → ✅ "Verified by 3 sources".
-    3.  **Expand:** Clicks card → Shows:
-        *   Full AI-generated analysis (Long Summary).
-        *   "Action Items" (Immediate/Soon).
-        *   "Affected Entities" (Companies/Products).
-        *   "Attack Chain" (Mermaid.js diagram).
-    4.  **Act:** "Share to Slack" button → Sends formatted alert to their security channel.
+**URL:** https://www.cybershepherd.app/dashboard
+
+The main intelligence hub with advanced filtering and semantic search:
+
+#### Layout
+| Section | Description |
+|---------|-------------|
+| **Left Sidebar** | Multi-dimensional filters |
+| **Main Feed** | Paginated article cards (24 per page) |
+| **Chat Widget** | RAG-powered AI assistant |
+
+#### Filter Categories
+* **Region Map:** Interactive geographic filter (40+ countries/regions with flags)
+* **Priority Groups:** CRITICAL, HIGH, MEDIUM, LOW, INFO
+* **Categories:** 40+ content categories (security, ai_ml, cloud, etc.)
+* **Technologies:** Filter by mentioned tech (Python, Kubernetes, AWS, etc.)
+* **Date Range:** 24h, 7d, 30d, All time
+* **Alert Threshold:** Relevance score slider (0-100)
+* **Sort Options:** Newest, Relevance Score, Priority
+
+#### Semantic Search
+* **Trigger:** User types in search box
+* **Backend:** Query → OpenAI embedding → pgvector similarity search
+* **Results:** Ranked by cosine similarity with applied filters
+* **Edge Function:** `semantic-search` (Supabase Edge)
 
 ---
 
-### 5. Chat with Data (The "Shepherd's Counsel")
+### 4. Article Detail Page
 
-*   **Trigger:** User needs specific context.
-*   **Action:** Clicks "Ask CyberShepherd" on any card.
-*   **Example Conversation:**
-    *   **User:** "Does this npm attack affect our Lambda functions?"
-    *   **Backend (RAG):**
-        *   Retrieves article + user's tech stack from `user_preferences`.
-        *   Searches `pgvector` for similar past incidents.
-        *   Sends context to Gemini.
-    *   **AI:** "Yes. Your Lambda uses Node.js 18. The malicious packages target `npm install` hooks. Check your `package-lock.json` for these 197 package names: [link]. Remediation: Run `npm audit` and pin dependencies."
+**URL:** https://www.cybershepherd.app/article/[id]
+
+Comprehensive analysis view for a single article:
+
+* **Header:** Headline, priority badge, relevance score gauge
+* **TL;DR:** 2-3 sentence executive summary
+* **Key Takeaways:** Bulleted critical points (highlighted, technical badges)
+* **Detailed Summary:** Full 3-5 sentence analysis
+* **Action Items:** Remediation plan with urgency levels (Immediate/Soon/When Possible)
+* **Affected Entities:** Companies, products, technologies, regions involved
+* **Technologies:** Tagged tech mentions
+* **Regions:** Geographic flags and labels
+* **Share Actions:** Email, Slack, Copy Link
+
+---
+
+### 5. Settings Page
+
+**URL:** https://www.cybershepherd.app/dashboard/settings
+
+User preferences and integrations management:
+
+#### Subscriptions Tab
+* **Create/Edit Subscriptions:** Name, filters, channels, frequency
+* **Frequencies:** Immediate (instant), Daily (9 AM), Weekly (Monday 9 AM)
+* **Channels:** Email, Slack
+* **Filter Options:** Tech stack, priority, alert threshold, targeted entities
+
+#### Slack Integration Tab
+* **OAuth Flow:** "Connect to Slack" → Slack authorization → Callback
+* **Channel Selection:** Choose target channel from workspace
+* **Status:** Connected workspace name, selected channel
+
+---
+
+### 6. Chat with Filter (RAG)
+
+**Trigger:** Click floating chat button or "Ask Shepherd" on any card
+
+#### Flow
+1. User asks a question (e.g., "What NVIDIA vulnerabilities were reported recently?")
+2. **Query Enrichment:** GPT-4o-mini expands query with synonyms and context
+3. **Embedding:** OpenAI text-embedding-3-small computes query vector
+4. **Hybrid Search:** Keyword search (for vendor names) + Semantic search (pgvector)
+5. **Context Building:** Top 10 relevant articles form the system prompt
+6. **Streaming Response:** GPT-4o-mini answers with article citations
+
+#### Edge Function: `chat-rag`
+```
+Request:
+{
+  "query": "What NVIDIA vulnerabilities were reported?",
+  "filters": { "categories": ["vulnerability"], "regions": ["usa"] },
+  "history": [{ "role": "user", "content": "..." }, ...]
+}
+
+Response: Server-Sent Events (SSE)
+- metadata: { articles: [...] }
+- content: { content: "..." } (streamed)
+- [DONE]
+```
 
 ---
 
 ## 🏗️ Technical Specifications
 
-### 1. Database Schema (Supabase)
+### 1. Database Schema (Supabase PostgreSQL)
 
-#### `articles`
+#### `news_articles` (517 rows)
 | Column | Type | Description |
-| :--- | :--- | :--- |
+|--------|------|-------------|
+| `id` | SERIAL | Primary Key |
+| `url` | TEXT | Unique constraint (dedup) |
+| `title` | TEXT | Original article title |
+| `thumbnail` | TEXT | Article image URL |
+| `text` | TEXT | Full article body (scraped) |
+| `tags` | TEXT | Source tags (e.g., "Security / Malware") |
+| `timestamp` | TEXT | Original publish date string |
+| `source` | TEXT | Author/source name |
+| `is_sponsored` | BOOLEAN | Sponsored content flag |
+| `created_at` | TIMESTAMPTZ | Ingestion timestamp |
+
+#### `article_analyses` (517 rows)
+| Column | Type | Description |
+|--------|------|-------------|
 | `id` | UUID | Primary Key |
-| `url` | Text | Unique constraint (prevent duplicates) |
-| `title` | Text | Original title |
-| `content_raw` | Text | Full HTML/Text scraped |
-| `published_at` | Timestamp | Original publish date |
-| `source` | Text | "The Hacker News", etc. |
-| `created_at` | Timestamp | When we ingested it |
+| `article_id` | INTEGER | FK to news_articles |
+| `article_url` | TEXT | Unique constraint |
+| `article_title` | TEXT | Original title |
+| `headline` | TEXT | AI-generated catchy headline |
+| `tldr` | TEXT | 2-3 sentence executive summary |
+| `short_summary` | TEXT | 1-2 sentence summary |
+| `long_summary` | TEXT | 3-5 sentence detailed summary |
+| `priority` | TEXT | CHECK: critical, high, medium, low, info |
+| `categories` | TEXT[] | Content categories array |
+| `content_type` | TEXT | Article type (news, tutorial, etc.) |
+| `key_takeaways` | JSONB | Array of {point, is_technical, highlight} |
+| `affected_entities` | JSONB | Array of {entity_type, name, details} |
+| `action_items` | JSONB | Array of {priority, action, target_audience} |
+| `relevance_score` | INTEGER | 1-10 practical value score |
+| `confidence_score` | INTEGER | 1-10 analysis accuracy |
+| `is_breaking_news` | BOOLEAN | Breaking news flag |
+| `is_sponsored` | BOOLEAN | Sponsored content flag |
+| `worth_full_read` | BOOLEAN | Should user read full article |
+| `read_time_minutes` | INTEGER | Estimated read time |
+| `related_topics` | TEXT[] | Related search terms |
+| `mentioned_technologies` | TEXT[] | Tech mentions |
+| `mentioned_companies` | TEXT[] | Company mentions |
+| `regions` | JSONB | Array of {region, flag} |
+| `model_used` | TEXT | LLM model (default: gpt-4o-mini) |
+| `analyzed_at` | TIMESTAMPTZ | Analysis timestamp |
+| `embedding` | VECTOR(1536) | OpenAI text-embedding-3-small |
 
-#### `processed_insights` (1:1 with articles)
+#### `subscriptions` (1 row)
 | Column | Type | Description |
-| :--- | :--- | :--- |
+|--------|------|-------------|
 | `id` | UUID | Primary Key |
-| `article_id` | UUID | FK to articles |
-| `analysis` | JSONB | Full structured `ArticleAnalysis` object |
-| `embedding` | Vector(768) | For RAG (Summary + Title) |
-| `trust_status` | Text | "unverified", "verified", "disputed" |
-| `verification_sources` | JSONB | `["https://cisa.gov/...", "https://nvd.nist.gov/..."]` |
-
-#### `user_preferences`
-| Column | Type | Description |
-| :--- | :--- | :--- |
 | `user_id` | UUID | FK to auth.users |
-| `company_name` | Text | Optional |
-| `role` | Text | "CISO", "Security Engineer", etc. |
-| `sector` | Text | "FinTech", "Healthcare", etc. |
-| `tech_stack` | JSONB | `{"cloud": ["AWS"], "languages": ["Python"], "services": ["Lambda"]}` |
-| `compliance` | JSONB | `["PCI-DSS", "SOC2"]` |
-| `alert_threshold` | Int | Minimum threat score to notify (default: 70) |
-| `slack_webhook` | Text | For notifications |
+| `name` | TEXT | Subscription name |
+| `filters` | JSONB | {techStack, priority, alertThreshold, targetedEntities} |
+| `channels` | JSONB | ["email", "slack"] |
+| `frequency` | TEXT | CHECK: immediate, daily, weekly |
+| `is_active` | BOOLEAN | Active subscription flag |
+| `created_at` | TIMESTAMPTZ | Creation timestamp |
+| `last_notified_at` | TIMESTAMPTZ | Last notification sent |
+
+#### `slack_connections` (1 row)
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | UUID | Primary Key |
+| `user_id` | UUID | FK to auth.users (unique) |
+| `team_id` | TEXT | Slack workspace ID |
+| `team_name` | TEXT | Workspace display name |
+| `access_token` | TEXT | Bot OAuth token (encrypted) |
+| `bot_user_id` | TEXT | Bot user ID |
+| `channel_id` | TEXT | Selected notification channel |
+| `channel_name` | TEXT | Channel display name |
+| `scope` | TEXT | OAuth scopes granted |
+| `connected_at` | TIMESTAMPTZ | Initial connection time |
+| `updated_at` | TIMESTAMPTZ | Last update time |
 
 ---
 
-### 2. AI Pipeline (LangChain + Gemini)
+### 2. API Routes (FastAPI)
 
-#### Agent A: The Analyst (Ingestion)
-*   **Trigger:** New RSS item from The Hacker News.
-*   **Input:** Raw article text.
-*   **Prompt:** Uses the `General News Article Analysis Schema` to extract structured data.
-*   **Output:** Structured JSON (`ArticleAnalysis`) → Saved to `processed_insights`.
+**Base URL:** https://sheepai-api-production.up.railway.app
 
-#### Agent B: The Skeptic (Verification)
-*   **Trigger:** User clicks "Fact-Check" OR `priority == CRITICAL`.
-*   **Tool:** Gemini 3.0 Pro with Google Search Grounding.
-*   **Prompt:**
-    ```
-    Verify these claims from a cybersecurity article:
-    "{tldr}"
-    
-    Search authoritative sources (CISA, NVD, vendor advisories, reputable security blogs).
-    Return:
-    1. Verification Status: "verified", "partially_verified", "disputed", "unverifiable".
-    2. Supporting Sources: URLs of confirming sources.
-    3. Discrepancies: Any conflicting information found.
-    ```
+#### Articles Router (`/articles`)
+| Route | Method | Description |
+|-------|--------|-------------|
+| `/articles` | GET | List articles (pagination, tag filter) |
+| `/articles/{id}` | GET | Get single article by ID |
+| `/articles/scrape` | POST | Manually trigger scrape job |
+| `/articles/stats/summary` | GET | Database statistics |
 
-#### Agent C: The Visualizer
-*   **Trigger:** User expands a card.
-*   **Prompt:**
-    ```
-    Based on this cybersecurity incident, generate a Mermaid.js flowchart showing the attack chain.
-    Include: Initial vector → Exploitation → Payload → Impact.
-    Keep it under 10 nodes. Use clear labels.
-    ```
-*   **Output:** Mermaid syntax string → Rendered client-side.
+#### Analysis Router (`/analysis`)
+| Route | Method | Description |
+|-------|--------|-------------|
+| `/analysis` | GET | List analyses (limit, priority filter) |
+| `/analysis/{id}` | GET | Get analysis by UUID |
+| `/analysis/by-url` | GET | Get analysis by article URL |
+| `/analysis` | POST | Analyze article (custom text) |
+| `/analysis/article/{id}` | POST | Analyze article from DB by ID |
+| `/analysis/{id}/slack` | GET | Get Slack-formatted analysis |
+
+#### Company Router (`/company`)
+| Route | Method | Description |
+|-------|--------|-------------|
+| `/company/profile` | POST | Full company profile + suggested filters |
+| `/company/suggest-filters` | POST | Lightweight filter suggestions |
+| `/company/filter-options` | GET | All available filter taxonomy |
+
+#### Notifications Router (`/notifications`)
+| Route | Method | Description |
+|-------|--------|-------------|
+| `/notifications/test-email` | POST | Send test email |
+
+#### Slack Router (`/slack`)
+| Route | Method | Description |
+|-------|--------|-------------|
+| `/slack/install` | GET | Start OAuth flow (redirect) |
+| `/slack/callback` | GET | OAuth callback handler |
+| `/slack/status` | GET | Check connection status |
+| `/slack/channels` | GET | List available channels |
+| `/slack/channel` | POST | Set notification channel |
+| `/slack/disconnect` | DELETE | Remove Slack connection |
+
+#### Share Router (`/share`)
+| Route | Method | Description |
+|-------|--------|-------------|
+| `/share/email` | POST | Share article via email |
+| `/share/slack` | POST | Share article to Slack channel |
+| `/share/slack/status` | GET | Check if user can share via Slack |
+
+#### Scheduler Router (`/scheduler`)
+| Route | Method | Description |
+|-------|--------|-------------|
+| `/scheduler/status` | GET | Get scheduler job status |
+| `/scheduler/run-now` | POST | Manually trigger scrape |
 
 ---
 
-### 3. Article Analysis Schema
+### 3. Supabase Edge Functions
 
-The core data structure for all processed articles:
+#### `semantic-search`
+Performs vector similarity search with filters.
+
+```typescript
+// Request
+{
+  query: string;
+  categories?: string[];
+  technologies?: string[];
+  priority?: string[];
+  regions?: string[];
+  from_date?: string;
+  to_date?: string;
+  match_threshold?: number; // default: 0.5
+  match_count?: number;     // default: 10
+}
+
+// Response
+{
+  success: boolean;
+  query: string;
+  result_count: number;
+  results: Array<{
+    id, article_url, headline, tldr, short_summary,
+    priority, categories, technologies, regions,
+    analyzed_at, relevance_score, similarity
+  }>
+}
+```
+
+#### `chat-rag`
+RAG-based conversational search with streaming responses.
+
+```typescript
+// Request
+{
+  query: string;
+  filters?: { categories?, technologies?, priority?, regions? };
+  history?: Array<{ role: 'user'|'assistant', content: string }>;
+}
+
+// Response (SSE Stream)
+data: {"type":"metadata","articles":[...]}
+data: {"type":"content","content":"..."}
+data: [DONE]
+```
+
+#### `compute-embedding`
+Triggered by database webhook when new articles are inserted.
+
+```typescript
+// Automatic via pg_net trigger
+// Computes embedding for article_analyses.headline + short_summary
+// Stores in article_analyses.embedding (vector 1536)
+```
+
+---
+
+### 4. AI Pipeline
+
+#### Agent A: The Analyst (Article Analysis)
+* **Trigger:** New article scraped and saved
+* **Input:** Article title, body text, URL, is_sponsored flag
+* **Model:** OpenAI GPT-4o-mini via LangChain
+* **Prompt:** Structured output for ArticleAnalysis schema
+* **Output:** Full analysis saved to `article_analyses`
 
 ```python
 class ArticleAnalysis(BaseModel):
-    headline: str               # Catchy 1-line summary
-    tldr: str                  # 2-3 sentence executive summary
-    priority: Priority         # CRITICAL, HIGH, MEDIUM, LOW, INFO
-    categories: list[ContentCategory]
+    headline: str           # Catchy 1-line summary (max 100 chars)
+    tldr: str              # 2-3 sentence executive summary
+    priority: Priority     # critical, high, medium, low, info
+    categories: list[ContentCategory]  # Max 3 categories
     content_type: ContentType
-    key_takeaways: list[KeyTakeaway]
-    affected_entities: list[AffectedEntity]
-    action_items: list[ActionItem]
-    short_summary: str
-    long_summary: str
-    relevance_score: int       # 1-10
-    confidence_score: int      # 1-10
+    key_takeaways: list[KeyTakeaway]   # 2-5 items
+    affected_entities: list[AffectedEntity]  # Max 5
+    action_items: list[ActionItem]     # Max 3
+    short_summary: str     # 1-2 sentences
+    long_summary: str      # 3-5 sentences
+    relevance_score: int   # 1-10 practical value
+    confidence_score: int  # 1-10 analysis accuracy
     is_breaking_news: bool
     is_sponsored: bool
     worth_full_read: bool
@@ -216,43 +385,262 @@ class ArticleAnalysis(BaseModel):
     related_topics: list[str]
     mentioned_technologies: list[str]
     mentioned_companies: list[str]
+    regions: list[RegionInfo]  # {region, flag}
+```
+
+#### Agent B: The Profiler (Company Analysis)
+* **Trigger:** User submits company URL + description
+* **Input:** Company website (scraped via Firecrawl), user description
+* **Model:** OpenAI GPT-4o-mini
+* **Output:** Company profile + suggested filter configuration
+
+#### Agent C: The Counselor (RAG Chat)
+* **Trigger:** User asks question in chat
+* **Pipeline:**
+  1. Query enrichment (expand abbreviations, add synonyms)
+  2. Compute embedding (text-embedding-3-small)
+  3. Hybrid search (keyword + semantic)
+  4. Build context from top 10 articles
+  5. Stream GPT-4o-mini response
+* **Output:** Streamed markdown answer with article citations
+
+---
+
+### 5. Scheduled Jobs (APScheduler)
+
+| Job | Schedule | Description |
+|-----|----------|-------------|
+| `scrape_hackernews` | Every 1 hour | Scrapes The Hacker News homepage, saves new articles, analyzes them |
+| `weekly_digest` | Monday 9:00 AM | Sends weekly summary emails to subscribers |
+
+#### Scrape Pipeline
+```
+1. GET https://thehackernews.com/
+2. Extract article URLs from homepage
+3. Filter out existing URLs (dedup)
+4. For each new article:
+   a. Fetch full article page
+   b. Extract title, body, thumbnail, tags, timestamp
+   c. Save to news_articles
+   d. Analyze with LLM → Save to article_analyses
+   e. Trigger notifications for matching subscriptions
 ```
 
 ---
 
-### 4. API Routes (Next.js App Router)
+### 6. Notification System
 
-| Route | Method | Description |
-| :--- | :--- | :--- |
-| `/api/ingest` | POST | Cron-triggered. Fetches RSS → Agent A → DB. |
-| `/api/feed` | GET | Returns paginated articles. Params: `categories[]`, `minPriority`, `page`. |
-| `/api/article/[id]` | GET | Full article details + AI analysis. |
-| `/api/verify/[id]` | POST | Triggers Agent B → Updates `trust_status`. |
-| `/api/chat` | POST | RAG chat. Body: `{ message, articleId? }`. Streams response. |
-| `/api/preferences` | GET/PUT | User's tech stack and notification settings. |
-| `/api/notify/slack` | POST | Sends formatted alert to user's Slack webhook. |
+#### Immediate Notifications
+* **Trigger:** New article matches active subscription with `frequency: immediate`
+* **Matching:** Check filters (techStack, priority, alertThreshold, targetedEntities)
+* **Channels:** Email (Brevo) and/or Slack
+
+#### Daily Digests
+* **Trigger:** Scheduled job at 9:00 AM
+* **Content:** Articles from last 24 hours matching subscription filters
+
+#### Weekly Digests
+* **Trigger:** Monday 9:00 AM
+* **Content:** Top 10 articles (by relevance) from last 7 days
+
+#### Email Format (Brevo)
+* Branded HTML template with CyberShepherd header
+* Priority-colored badges
+* Key takeaways list
+* Technology tags
+* CTA buttons: "View Analysis", "Read Source"
+
+#### Slack Format (Block Kit)
+* Priority emoji header (🔴🟠🟡🟢🔵)
+* Summary section
+* Key takeaways bullets
+* Technology tags in backticks
+* Action buttons: "🛡️ View Analysis", "🔗 Read Source"
 
 ---
 
-### 5. Relevance Scoring Algorithm
+### 7. Content Taxonomy
 
+#### Priority Levels
+| Priority | Emoji | Description |
+|----------|-------|-------------|
+| CRITICAL | 🔴 | Breaking news, active exploits, urgent patches |
+| HIGH | 🟠 | Important vulnerabilities, significant threats |
+| MEDIUM | 🟡 | Notable news, worth knowing |
+| LOW | 🟢 | Nice to know, minor updates |
+| INFO | 🔵 | Reference material, tutorials |
+
+#### Content Categories (40+)
+**Security:** security, vulnerability, malware, data_breach, privacy
+**Development:** programming, web_dev, mobile_dev, devops, open_source
+**AI & Data:** ai_ml, llm, data_science, automation
+**Cloud:** cloud, infrastructure, networking, database
+**Business:** startup, enterprise, acquisition, funding, layoffs
+**Product:** product_launch, update, deprecation, tool_release
+**Learning:** tutorial, guide, best_practices, case_study
+**Research:** research, analysis, trends, opinion
+**Regulatory:** regulation, compliance, legal
+**Other:** hardware, gaming, crypto, other
+
+#### Geographic Regions (40+)
+Global, North America, Europe, Asia, Middle East, Africa
+Individual countries with flag emojis (🇺🇸🇬🇧🇨🇳🇷🇺🇰🇷🇰🇵🇺🇦🇮🇷🇮🇱🇯🇵🇩🇪...)
+
+---
+
+### 8. Security & Performance
+
+#### Authentication
+* Supabase Auth with JWT tokens
+* OAuth providers: Google, GitHub
+* RLS disabled on public tables (read-only public access)
+
+#### API Security
+* CORS: Allow all origins (public API)
+* Rate limiting: Managed by Railway/Vercel
+* JWT verification for protected endpoints
+
+#### Database
+* pgvector extension for embeddings
+* pg_net extension for webhook triggers
+* Indexes on frequently queried columns
+
+#### Caching
+* Vercel Edge caching for static assets
+* Client-side state management with React hooks
+
+---
+
+### 9. Environment Variables
+
+#### API (Railway)
+```env
+OPENAI_API_KEY=sk-...
+SUPABASE_URL=https://xxx.supabase.co
+SUPABASE_KEY=eyJ...
+BREVO_API_KEY=xkeysib-...
+EMAIL_FROM_ADDRESS=noreply@cybershepherd.app
+SLACK_CLIENT_ID=xxx
+SLACK_CLIENT_SECRET=xxx
+SLACK_REDIRECT_URI=https://sheepai-api-production.up.railway.app/slack/callback
+FRONTEND_URL=https://www.cybershepherd.app
+JWT_SECRET=xxx
+SCRAPE_INTERVAL_HOURS=1
 ```
-relevance_score = (priority_score * 0.4) + (tag_match_score * 0.6)
 
-Where:
-- priority_score: CRITICAL=10, HIGH=8, MEDIUM=5, LOW=2, INFO=1
-- tag_match_score: (matched_categories + matched_tech) / user_total_interests * 10
+#### Web (Vercel)
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+NEXT_PUBLIC_API_URL=https://sheepai-api-production.up.railway.app
+```
+
+#### Supabase Edge Functions
+```env
+OPENAI_API_KEY=sk-...
+SUPABASE_URL=https://xxx.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=eyJ...
 ```
 
 ---
 
-### 6. Security & Performance
+### 10. Current Statistics
 
-*   **RLS (Row Level Security):**
-    *   `articles` + `processed_insights`: Public read.
-    *   `user_preferences`: User can only read/write their own row.
-*   **Edge Caching:** Feed results cached for 5 minutes at edge.
-*   **Rate Limiting:** 
-    *   `/api/chat`: 20 requests/minute per user.
-    *   `/api/verify`: 10 requests/minute per user.
-*   **Data Retention:** Articles older than 90 days archived to cold storage.
+| Metric | Value |
+|--------|-------|
+| Total Articles Scraped | 517 |
+| Total Analyses | 517 |
+| Critical Priority | 152 (29%) |
+| High Priority | 365 (71%) |
+| Active Subscriptions | 1 |
+| Edge Functions | 3 (semantic-search, chat-rag, compute-embedding) |
+| Scrape Frequency | Every 1 hour |
+
+---
+
+## 📊 Data Flow Diagrams
+
+### Article Ingestion Flow
+```
+┌──────────────────┐     ┌──────────────┐     ┌────────────────┐
+│  The Hacker News │────▶│  Scraper     │────▶│  news_articles │
+│  Homepage        │     │  (FastAPI)   │     │  (Supabase)    │
+└──────────────────┘     └──────────────┘     └────────────────┘
+                                │
+                                ▼
+                         ┌──────────────┐     ┌──────────────────┐
+                         │  Analyzer    │────▶│article_analyses  │
+                         │  (LangChain) │     │  (Supabase)      │
+                         └──────────────┘     └──────────────────┘
+                                │
+                                ▼
+                         ┌──────────────┐     ┌──────────────────┐
+                         │  DB Trigger  │────▶│compute-embedding │
+                         │  (pg_net)    │     │  (Edge Function) │
+                         └──────────────┘     └──────────────────┘
+                                │
+                                ▼
+                         ┌──────────────┐
+                         │  Notifier    │────▶ Email (Brevo)
+                         │  (FastAPI)   │────▶ Slack (SDK)
+                         └──────────────┘
+```
+
+### Search Flow
+```
+┌──────────────┐     ┌──────────────────┐     ┌──────────────────┐
+│  User Query  │────▶│  semantic-search │────▶│  OpenAI Embed    │
+│  (Frontend)  │     │  (Edge Function) │     │  (API)           │
+└──────────────┘     └──────────────────┘     └──────────────────┘
+                                │
+                                ▼
+                         ┌──────────────────┐
+                         │  search_articles │
+                         │  (Postgres RPC)  │
+                         │  pgvector <->    │
+                         └──────────────────┘
+                                │
+                                ▼
+                         ┌──────────────────┐
+                         │  Results +       │
+                         │  Similarity      │
+                         └──────────────────┘
+```
+
+### RAG Chat Flow
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────────────┐
+│  User Query  │────▶│  chat-rag    │────▶│  Query Enrichment│
+│  + History   │     │  (Edge Func) │     │  (GPT-4o-mini)   │
+└──────────────┘     └──────────────┘     └──────────────────┘
+                                │
+                                ▼
+                         ┌──────────────────┐
+                         │  Hybrid Search   │
+                         │  Keyword + Vector│
+                         └──────────────────┘
+                                │
+                                ▼
+                         ┌──────────────────┐
+                         │  Build Context   │
+                         │  (Top 10 Articles│
+                         └──────────────────┘
+                                │
+                                ▼
+                         ┌──────────────────┐
+                         │  Stream Response │
+                         │  (GPT-4o-mini)   │
+                         └──────────────────┘
+```
+
+---
+
+## 🔮 Future Enhancements
+
+* [ ] Multi-source scraping (BleepingComputer, Dark Reading, KrebsOnSecurity)
+* [ ] Real-time CVE correlation with NVD/CISA
+* [ ] Attack chain visualization (Mermaid.js diagrams)
+* [ ] Team/Organization features
+* [ ] Threat intelligence feeds integration
+* [ ] Browser extension for quick article analysis
+* [ ] Mobile app (React Native)
