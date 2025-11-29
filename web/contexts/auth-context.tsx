@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
@@ -39,17 +39,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     channelId: null,
   });
   const router = useRouter();
+  const slackFetchedRef = useRef(false);
 
-  // Fetch Slack status from database
+  // Fetch Slack status from database - NON-BLOCKING
   const fetchSlackStatus = useCallback(async (userId: string) => {
     try {
+      // Use .maybeSingle() instead of .single() to avoid 406 errors when no row exists
       const { data, error } = await supabase
         .from("slack_connections")
         .select("channel_id, channel_name")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
 
-      if (error || !data) {
+      if (error) {
+        console.warn("Slack status fetch error:", error.message);
+        setSlackStatus({ connected: false, channelName: null, channelId: null });
+        return;
+      }
+
+      if (!data) {
         setSlackStatus({ connected: false, channelName: null, channelId: null });
         return;
       }
@@ -78,13 +86,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Fetch Slack status if user is logged in
-        if (session?.user?.id) {
-          await fetchSlackStatus(session.user.id);
+        // Set loading to false IMMEDIATELY - don't wait for slack status
+        setIsLoading(false);
+        
+        // Fetch Slack status in background (non-blocking)
+        if (session?.user?.id && !slackFetchedRef.current) {
+          slackFetchedRef.current = true;
+          // Fire and forget - don't await
+          fetchSlackStatus(session.user.id);
         }
       } catch (error) {
         console.error("Error initializing auth:", error);
-      } finally {
         setIsLoading(false);
       }
     };
@@ -93,18 +105,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log("Auth state changed:", event);
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
 
         if (event === 'SIGNED_IN' && session?.user?.id) {
-          await fetchSlackStatus(session.user.id);
+          // Fire and forget - don't await
+          fetchSlackStatus(session.user.id);
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setSession(null);
           setSlackStatus({ connected: false, channelName: null, channelId: null });
+          slackFetchedRef.current = false;
           router.refresh();
         }
       }
