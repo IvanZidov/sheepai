@@ -1,53 +1,88 @@
 "use client";
 
-import { Bot, Layers, Network, SearchCheck, Zap } from "lucide-react";
+import { Filter, FileText, Bell, ShieldCheck, BarChart3 } from "lucide-react";
+
+const features = [
+  {
+    icon: Filter,
+    title: "Category Filtering",
+    problem: "Too much irrelevant noise",
+    solution: "Follow only Malware, Phishing, AI Agents, or any category you care about. Everything else gets filtered out.",
+    color: "text-blue-500",
+    bg: "bg-blue-500/10"
+  },
+  {
+    icon: FileText,
+    title: "AI Summaries",
+    problem: "Articles are too lengthy",
+    solution: "Every article gets a 2-minute summary with key takeaways. Decide quickly if it's worth your time.",
+    color: "text-violet-500",
+    bg: "bg-violet-500/10"
+  },
+  {
+    icon: Bell,
+    title: "Scheduled Alerts",
+    problem: "Manually checking for updates",
+    solution: "Get daily or weekly digests via Email or Slack. Never miss critical news, never waste time checking.",
+    color: "text-amber-500",
+    bg: "bg-amber-500/10"
+  },
+  {
+    icon: ShieldCheck,
+    title: "Verified Content",
+    problem: "Worried about false information",
+    solution: "Every analysis links to original sources. Cross-referenced with CISA and NVD for accuracy.",
+    color: "text-emerald-500",
+    bg: "bg-emerald-500/10"
+  },
+  {
+    icon: BarChart3,
+    title: "Visual Scoring",
+    problem: "Hard to prioritize quickly",
+    solution: "Color-coded priority levels and relevance scores. Know what needs attention at a glance.",
+    color: "text-rose-500",
+    bg: "bg-rose-500/10"
+  }
+];
 
 export function FeatureCards() {
-  const features = [
-    {
-      icon: <Layers className="w-6 h-6 text-emerald-400" />,
-      title: "Your Stack. Your News.",
-      description: "Tell us you use AWS Lambda and Python. We filter 10,000 articles down to the 5 that actually affect your infrastructure.",
-      gradient: "from-emerald-500/10 to-cyan-500/10"
-    },
-    {
-      icon: <SearchCheck className="w-6 h-6 text-blue-400" />,
-      title: "Trust, But Verify.",
-      description: "AI hallucinations are the new vulnerabilities. Every critical alert is fact-checked against live CISA and NVD sources.",
-      gradient: "from-blue-500/10 to-indigo-500/10"
-    },
-    {
-      icon: <Network className="w-6 h-6 text-purple-400" />,
-      title: "Understand in Seconds.",
-      description: "Don't parse 3,000-word PDF reports. See the attack vector visualized in a clear diagram in 3 seconds.",
-      gradient: "from-purple-500/10 to-pink-500/10"
-    }
-  ];
-
   return (
-    <section className="py-24 bg-background border-y border-border">
+    <section className="py-20 bg-muted/30">
       <div className="container mx-auto px-4">
-        <div className="grid md:grid-cols-3 gap-8">
-          {features.map((feature, index) => (
-            <div 
-              key={index} 
-              className="relative p-8 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300 hover:-translate-y-1 group overflow-hidden shadow-sm"
-            >
-              <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-              
-              <div className="relative z-10">
-                <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 border border-border">
-                  {feature.icon}
+        <div className="text-center mb-12">
+          <h2 className="text-3xl sm:text-4xl font-bold font-heading mb-4">
+            Your problems, solved
+          </h2>
+          <p className="text-muted-foreground max-w-xl mx-auto">
+            We built CyberShepherd because we had the same frustrations with security news.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {features.map((feature, index) => {
+            const Icon = feature.icon;
+            
+            return (
+              <div 
+                key={index}
+                className="bg-card border border-border rounded-xl p-6 hover:shadow-lg transition-shadow"
+              >
+                <div className={`w-12 h-12 rounded-lg ${feature.bg} flex items-center justify-center mb-4`}>
+                  <Icon className={`w-6 h-6 ${feature.color}`} />
                 </div>
-                <h3 className="text-xl font-bold text-card-foreground mb-3 font-heading">
-                  {feature.title}
-                </h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  {feature.description}
+                
+                <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                
+                <p className="text-sm text-muted-foreground mb-3">
+                  <span className="text-destructive font-medium">Problem:</span> {feature.problem}
+                </p>
+                
+                <p className="text-sm text-muted-foreground">
+                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">Solution:</span> {feature.solution}
                 </p>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
