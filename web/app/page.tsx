@@ -5,7 +5,6 @@ import { ShepherdNav } from "@/components/layout/shepherd-nav";
 import { ThreatCard } from "@/components/feed/threat-card";
 import { ShepherdChat } from "@/components/chat/shepherd-chat";
 import { HeroSection } from "@/components/landing/hero-section";
-import { FeatureCards } from "@/components/landing/feature-cards";
 import { NewsletterInline } from "@/components/landing/newsletter-inline";
 import { fetchArticles } from "@/lib/articles";
 import { Article } from "@/lib/types";
@@ -39,7 +38,6 @@ export default function LandingPage() {
       
       <main>
         <HeroSection />
-        <FeatureCards />
 
         {/* Public Feed Section */}
         <section id="feed" className="py-24 bg-background relative">

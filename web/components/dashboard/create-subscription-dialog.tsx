@@ -22,12 +22,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Bell, Settings, Filter, Check, Pencil, BellRing } from "lucide-react";
+import { Bell, Settings, Filter, Check, Pencil, BellRing, Lock } from "lucide-react";
 import { useUserPreferences } from "@/lib/user-preferences";
 import { createSubscription, updateSubscription, fetchSubscriptions, Subscription } from "@/lib/subscriptions";
 import { getSlackStatus, SlackStatus } from "@/lib/slack";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useAuth } from "@/contexts/auth-context";
+import { useRouter } from "next/navigation";
 
 interface CreateSubscriptionDialogProps {
   editSubscription?: Subscription | null;
@@ -41,6 +43,8 @@ export function CreateSubscriptionDialog({
   triggerButton 
 }: CreateSubscriptionDialogProps) {
   const [open, setOpen] = useState(false);
+  const { user } = useAuth();
+  const router = useRouter();
   const [name, setName] = useState("");
   const [frequency, setFrequency] = useState<"immediate" | "daily" | "weekly">("immediate");
   const [emailEnabled, setEmailEnabled] = useState(true);
@@ -212,6 +216,23 @@ export function CreateSubscriptionDialog({
   // Dynamic button based on subscription state
   const renderTriggerButton = () => {
     if (triggerButton) return triggerButton;
+    
+    if (!user) {
+        return (
+            <Button 
+              variant="outline" 
+              className="gap-2 border-emerald-500/30 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
+              onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  router.push("/login");
+              }}
+            >
+              <Lock className="h-4 w-4" />
+              <span className="hidden sm:inline">Login to Subscribe</span>
+            </Button>
+        );
+    }
     
     if (existingMatch) {
       return (

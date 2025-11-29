@@ -93,11 +93,8 @@ export function ShepherdNav() {
                  </>
              ) : (
                  <>
-                    <Link href="/#features" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors hidden sm:block">
-                        Features
-                    </Link>
-                    <Link href="/#pricing" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors hidden sm:block">
-                        Pricing
+                    <Link href="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors hidden sm:block">
+                        Dashboard
                     </Link>
                     <ThemeToggle />
                     {!isLoading && (
